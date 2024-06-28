@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "components"
+version = "0.1.0"
+description = "Kubeflow pipeline components for GCP"
+authors = ["Example User <user@example.com>"]
+
+
+[tool.poetry.dependencies]
+python = "3.10.14"
+kfp = "^2.7.0"
+
+
+[tool.poetry.group.dev.dependencies]
+google-cloud-bigquery = "^3.24.0"
+google-cloud-aiplatform = "^1.55.0"
+google-cloud-pipeline-components = "^2.14.1"
+pytest = "^8.2.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

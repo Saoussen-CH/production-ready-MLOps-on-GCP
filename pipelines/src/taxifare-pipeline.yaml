@@ -1,0 +1,1469 @@
+# PIPELINE DEFINITION
+# Name: taxifare-training-pipeline
+# Description: Training pipeline which:
+#              1. Preprocesses data in BigQuery
+#               2. Extracts data to Cloud Storage
+#               3. Trains a model using a custom prebuilt container
+#               4. Uploads the model to Model Registry
+#               5. Evaluates the model against a champion model
+#               6. Selects a new champion based on the primary metrics
+# Inputs:
+#    base_output_dir: str [Default: '']
+#    bq_location: str [Default: 'US']
+#    bq_source_uri: str [Default: 'bigquery-public-data.chicago_taxi_trips.taxi_trips']
+#    dataset: str [Default: 'taxi_trips_dataset']
+#    image_uri: str [Default: '']
+#    location: str [Default: 'us-central1']
+#    model_name: str [Default: 'taxi-traffic-model']
+#    project: str [Default: 'mlops-learning-422012']
+#    test_data_gcs_uri: str [Default: '']
+#    timestamp: str [Default: '2022-12-01 00:00:00']
+#    training_job_display_name: str [Default: '']
+# Outputs:
+#    get-custom-job-results-op-metrics: system.Metrics
+components:
+  comp-bigquery-query-job:
+    executorLabel: exec-bigquery-query-job
+    inputDefinitions:
+      parameters:
+        encryption_spec_key_name:
+          defaultValue: ''
+          description: Describes the Cloud KMS encryption key that will be used to
+            protect destination BigQuery table. The BigQuery Service Account associated
+            with your project requires access to this encryption key. If encryption_spec_key_name
+            are both specified in here and in job_configuration_query, the value in
+            here will override the other one.
+          isOptional: true
+          parameterType: STRING
+        job_configuration_query:
+          defaultValue: {}
+          description: A json formatted string describing the rest of the job configuration.  For
+            more details, see https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#JobConfigurationQuery
+          isOptional: true
+          parameterType: STRUCT
+        labels:
+          defaultValue: {}
+          description: 'The labels associated with this job. You can use these to
+            organize and group your jobs. Label keys and values can be no longer than
+            63 characters, can only containlowercase letters, numeric characters,
+            underscores and dashes. International characters are allowed. Label values
+            are optional. Label keys must start with a letter and each label in the
+            list must have a different key.
+
+            Example: { "name": "wrench", "mass": "1.3kg", "count": "3" }.'
+          isOptional: true
+          parameterType: STRUCT
+        location:
+          defaultValue: us-central1
+          description: Location for creating the BigQuery job. If not set, default
+            to `US` multi-region.  For more details, see https://cloud.google.com/bigquery/docs/locations#specifying_your_location
+          isOptional: true
+          parameterType: STRING
+        project:
+          defaultValue: '{{$.pipeline_google_cloud_project_id}}'
+          description: Project to run the BigQuery query job. Defaults to the project
+            in which the PipelineJob is run.
+          isOptional: true
+          parameterType: STRING
+        query:
+          defaultValue: ''
+          description: SQL query text to execute. Only standard SQL is supported.  If
+            query are both specified in here and in job_configuration_query, the value
+            in here will override the other one.
+          isOptional: true
+          parameterType: STRING
+        query_parameters:
+          defaultValue: []
+          description: jobs.query parameters for standard SQL queries.  If query_parameters
+            are both specified in here and in job_configuration_query, the value in
+            here will override the other one.
+          isOptional: true
+          parameterType: LIST
+    outputDefinitions:
+      artifacts:
+        destination_table:
+          artifactType:
+            schemaTitle: google.BQTable
+            schemaVersion: 0.0.1
+          description: Describes the table where the query results should be stored.
+            This property must be set for large results that exceed the maximum response
+            size. For queries that produce anonymous (cached) results, this field
+            will be populated by BigQuery.
+      parameters:
+        gcp_resources:
+          description: Serialized gcp_resources proto tracking the BigQuery job. For
+            more details, see https://github.com/kubeflow/pipelines/blob/master/components/google-cloud/google_cloud_pipeline_components/proto/README.md.
+          parameterType: STRING
+  comp-bigquery-query-job-2:
+    executorLabel: exec-bigquery-query-job-2
+    inputDefinitions:
+      parameters:
+        encryption_spec_key_name:
+          defaultValue: ''
+          description: Describes the Cloud KMS encryption key that will be used to
+            protect destination BigQuery table. The BigQuery Service Account associated
+            with your project requires access to this encryption key. If encryption_spec_key_name
+            are both specified in here and in job_configuration_query, the value in
+            here will override the other one.
+          isOptional: true
+          parameterType: STRING
+        job_configuration_query:
+          defaultValue: {}
+          description: A json formatted string describing the rest of the job configuration.  For
+            more details, see https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#JobConfigurationQuery
+          isOptional: true
+          parameterType: STRUCT
+        labels:
+          defaultValue: {}
+          description: 'The labels associated with this job. You can use these to
+            organize and group your jobs. Label keys and values can be no longer than
+            63 characters, can only containlowercase letters, numeric characters,
+            underscores and dashes. International characters are allowed. Label values
+            are optional. Label keys must start with a letter and each label in the
+            list must have a different key.
+
+            Example: { "name": "wrench", "mass": "1.3kg", "count": "3" }.'
+          isOptional: true
+          parameterType: STRUCT
+        location:
+          defaultValue: us-central1
+          description: Location for creating the BigQuery job. If not set, default
+            to `US` multi-region.  For more details, see https://cloud.google.com/bigquery/docs/locations#specifying_your_location
+          isOptional: true
+          parameterType: STRING
+        project:
+          defaultValue: '{{$.pipeline_google_cloud_project_id}}'
+          description: Project to run the BigQuery query job. Defaults to the project
+            in which the PipelineJob is run.
+          isOptional: true
+          parameterType: STRING
+        query:
+          defaultValue: ''
+          description: SQL query text to execute. Only standard SQL is supported.  If
+            query are both specified in here and in job_configuration_query, the value
+            in here will override the other one.
+          isOptional: true
+          parameterType: STRING
+        query_parameters:
+          defaultValue: []
+          description: jobs.query parameters for standard SQL queries.  If query_parameters
+            are both specified in here and in job_configuration_query, the value in
+            here will override the other one.
+          isOptional: true
+          parameterType: LIST
+    outputDefinitions:
+      artifacts:
+        destination_table:
+          artifactType:
+            schemaTitle: google.BQTable
+            schemaVersion: 0.0.1
+          description: Describes the table where the query results should be stored.
+            This property must be set for large results that exceed the maximum response
+            size. For queries that produce anonymous (cached) results, this field
+            will be populated by BigQuery.
+      parameters:
+        gcp_resources:
+          description: Serialized gcp_resources proto tracking the BigQuery job. For
+            more details, see https://github.com/kubeflow/pipelines/blob/master/components/google-cloud/google_cloud_pipeline_components/proto/README.md.
+          parameterType: STRING
+  comp-bigquery-query-job-3:
+    executorLabel: exec-bigquery-query-job-3
+    inputDefinitions:
+      parameters:
+        encryption_spec_key_name:
+          defaultValue: ''
+          description: Describes the Cloud KMS encryption key that will be used to
+            protect destination BigQuery table. The BigQuery Service Account associated
+            with your project requires access to this encryption key. If encryption_spec_key_name
+            are both specified in here and in job_configuration_query, the value in
+            here will override the other one.
+          isOptional: true
+          parameterType: STRING
+        job_configuration_query:
+          defaultValue: {}
+          description: A json formatted string describing the rest of the job configuration.  For
+            more details, see https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#JobConfigurationQuery
+          isOptional: true
+          parameterType: STRUCT
+        labels:
+          defaultValue: {}
+          description: 'The labels associated with this job. You can use these to
+            organize and group your jobs. Label keys and values can be no longer than
+            63 characters, can only containlowercase letters, numeric characters,
+            underscores and dashes. International characters are allowed. Label values
+            are optional. Label keys must start with a letter and each label in the
+            list must have a different key.
+
+            Example: { "name": "wrench", "mass": "1.3kg", "count": "3" }.'
+          isOptional: true
+          parameterType: STRUCT
+        location:
+          defaultValue: us-central1
+          description: Location for creating the BigQuery job. If not set, default
+            to `US` multi-region.  For more details, see https://cloud.google.com/bigquery/docs/locations#specifying_your_location
+          isOptional: true
+          parameterType: STRING
+        project:
+          defaultValue: '{{$.pipeline_google_cloud_project_id}}'
+          description: Project to run the BigQuery query job. Defaults to the project
+            in which the PipelineJob is run.
+          isOptional: true
+          parameterType: STRING
+        query:
+          defaultValue: ''
+          description: SQL query text to execute. Only standard SQL is supported.  If
+            query are both specified in here and in job_configuration_query, the value
+            in here will override the other one.
+          isOptional: true
+          parameterType: STRING
+        query_parameters:
+          defaultValue: []
+          description: jobs.query parameters for standard SQL queries.  If query_parameters
+            are both specified in here and in job_configuration_query, the value in
+            here will override the other one.
+          isOptional: true
+          parameterType: LIST
+    outputDefinitions:
+      artifacts:
+        destination_table:
+          artifactType:
+            schemaTitle: google.BQTable
+            schemaVersion: 0.0.1
+          description: Describes the table where the query results should be stored.
+            This property must be set for large results that exceed the maximum response
+            size. For queries that produce anonymous (cached) results, this field
+            will be populated by BigQuery.
+      parameters:
+        gcp_resources:
+          description: Serialized gcp_resources proto tracking the BigQuery job. For
+            more details, see https://github.com/kubeflow/pipelines/blob/master/components/google-cloud/google_cloud_pipeline_components/proto/README.md.
+          parameterType: STRING
+  comp-bigquery-query-job-4:
+    executorLabel: exec-bigquery-query-job-4
+    inputDefinitions:
+      parameters:
+        encryption_spec_key_name:
+          defaultValue: ''
+          description: Describes the Cloud KMS encryption key that will be used to
+            protect destination BigQuery table. The BigQuery Service Account associated
+            with your project requires access to this encryption key. If encryption_spec_key_name
+            are both specified in here and in job_configuration_query, the value in
+            here will override the other one.
+          isOptional: true
+          parameterType: STRING
+        job_configuration_query:
+          defaultValue: {}
+          description: A json formatted string describing the rest of the job configuration.  For
+            more details, see https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#JobConfigurationQuery
+          isOptional: true
+          parameterType: STRUCT
+        labels:
+          defaultValue: {}
+          description: 'The labels associated with this job. You can use these to
+            organize and group your jobs. Label keys and values can be no longer than
+            63 characters, can only containlowercase letters, numeric characters,
+            underscores and dashes. International characters are allowed. Label values
+            are optional. Label keys must start with a letter and each label in the
+            list must have a different key.
+
+            Example: { "name": "wrench", "mass": "1.3kg", "count": "3" }.'
+          isOptional: true
+          parameterType: STRUCT
+        location:
+          defaultValue: us-central1
+          description: Location for creating the BigQuery job. If not set, default
+            to `US` multi-region.  For more details, see https://cloud.google.com/bigquery/docs/locations#specifying_your_location
+          isOptional: true
+          parameterType: STRING
+        project:
+          defaultValue: '{{$.pipeline_google_cloud_project_id}}'
+          description: Project to run the BigQuery query job. Defaults to the project
+            in which the PipelineJob is run.
+          isOptional: true
+          parameterType: STRING
+        query:
+          defaultValue: ''
+          description: SQL query text to execute. Only standard SQL is supported.  If
+            query are both specified in here and in job_configuration_query, the value
+            in here will override the other one.
+          isOptional: true
+          parameterType: STRING
+        query_parameters:
+          defaultValue: []
+          description: jobs.query parameters for standard SQL queries.  If query_parameters
+            are both specified in here and in job_configuration_query, the value in
+            here will override the other one.
+          isOptional: true
+          parameterType: LIST
+    outputDefinitions:
+      artifacts:
+        destination_table:
+          artifactType:
+            schemaTitle: google.BQTable
+            schemaVersion: 0.0.1
+          description: Describes the table where the query results should be stored.
+            This property must be set for large results that exceed the maximum response
+            size. For queries that produce anonymous (cached) results, this field
+            will be populated by BigQuery.
+      parameters:
+        gcp_resources:
+          description: Serialized gcp_resources proto tracking the BigQuery job. For
+            more details, see https://github.com/kubeflow/pipelines/blob/master/components/google-cloud/google_cloud_pipeline_components/proto/README.md.
+          parameterType: STRING
+  comp-custom-training-job:
+    executorLabel: exec-custom-training-job
+    inputDefinitions:
+      parameters:
+        base_output_directory:
+          defaultValue: ''
+          description: The Cloud Storage location to store the output of this CustomJob
+            or HyperparameterTuningJob. See [more information ](https://cloud.google.com/vertex-ai/docs/reference/rest/v1/GcsDestination).
+          isOptional: true
+          parameterType: STRING
+        display_name:
+          description: The name of the CustomJob.
+          parameterType: STRING
+        enable_web_access:
+          defaultValue: false
+          description: Whether you want Vertex AI to enable [interactive shell access
+            ](https://cloud.google.com/vertex-ai/docs/training/monitor-debug-interactive-shell)
+            to training containers. If `True`, you can access interactive shells at
+            the URIs given by [CustomJob.web_access_uris][].
+          isOptional: true
+          parameterType: BOOLEAN
+        encryption_spec_key_name:
+          defaultValue: ''
+          description: Customer-managed encryption key options for the CustomJob.
+            If this is set, then all resources created by the CustomJob will be encrypted
+            with the provided encryption key.
+          isOptional: true
+          parameterType: STRING
+        labels:
+          defaultValue: {}
+          description: The labels with user-defined metadata to organize the CustomJob.
+            See [more information](https://goo.gl/xmQnxf).
+          isOptional: true
+          parameterType: STRUCT
+        location:
+          defaultValue: us-central1
+          description: Location for creating the custom training job. If not set,
+            default to us-central1.
+          isOptional: true
+          parameterType: STRING
+        network:
+          defaultValue: ''
+          description: The full name of the Compute Engine network to which the job
+            should be peered. For example, `projects/12345/global/networks/myVPC`.
+            Format is of the form `projects/{project}/global/networks/{network}`.
+            Where `{project}` is a project number, as in `12345`, and `{network}`
+            is a network name. Private services access must already be configured
+            for the network. If left unspecified, the job is not peered with any network.
+          isOptional: true
+          parameterType: STRING
+        project:
+          defaultValue: '{{$.pipeline_google_cloud_project_id}}'
+          description: Project to create the custom training job in. Defaults to the
+            project in which the PipelineJob is run.
+          isOptional: true
+          parameterType: STRING
+        reserved_ip_ranges:
+          defaultValue: []
+          description: A list of names for the reserved IP ranges under the VPC network
+            that can be used for this job. If set, we will deploy the job within the
+            provided IP ranges. Otherwise, the job will be deployed to any IP ranges
+            under the provided VPC network.
+          isOptional: true
+          parameterType: LIST
+        restart_job_on_worker_restart:
+          defaultValue: false
+          description: Restarts the entire CustomJob if a worker gets restarted. This
+            feature can be used by distributed training jobs that are not resilient
+            to workers leaving and joining a job.
+          isOptional: true
+          parameterType: BOOLEAN
+        service_account:
+          defaultValue: ''
+          description: Sets the default service account for workload run-as account.
+            The [service account ](https://cloud.google.com/vertex-ai/docs/pipelines/configure-project#service-account)
+            running the pipeline submitting jobs must have act-as permission on this
+            run-as account. If unspecified, the Vertex AI Custom Code [Service Agent
+            ](https://cloud.google.com/vertex-ai/docs/general/access-control#service-agents)
+            for the CustomJob's project.
+          isOptional: true
+          parameterType: STRING
+        tensorboard:
+          defaultValue: ''
+          description: The name of a Vertex AI TensorBoard resource to which this
+            CustomJob will upload TensorBoard logs.
+          isOptional: true
+          parameterType: STRING
+        timeout:
+          defaultValue: 604800s
+          description: 'The maximum job running time. The default is 7 days. A duration
+            in seconds with up to nine fractional digits, terminated by ''s'', for
+            example: "3.5s".'
+          isOptional: true
+          parameterType: STRING
+        worker_pool_specs:
+          defaultValue: []
+          description: Serialized json spec of the worker pools including machine
+            type and Docker image. All worker pools except the first one are optional
+            and can be skipped by providing an empty value. See [more information](https://cloud.google.com/vertex-ai/docs/reference/rest/v1/CustomJobSpec#WorkerPoolSpec).
+          isOptional: true
+          parameterType: LIST
+    outputDefinitions:
+      parameters:
+        gcp_resources:
+          description: Serialized JSON of `gcp_resources` [proto](https://github.com/kubeflow/pipelines/tree/master/components/google-cloud/google_cloud_pipeline_components/proto)
+            which tracks the CustomJob.
+          parameterType: STRING
+  comp-extract-table-to-gcs-op:
+    executorLabel: exec-extract-table-to-gcs-op
+    inputDefinitions:
+      artifacts:
+        bq_table:
+          artifactType:
+            schemaTitle: system.Artifact
+            schemaVersion: 0.0.1
+      parameters:
+        location:
+          defaultValue: US
+          isOptional: true
+          parameterType: STRING
+    outputDefinitions:
+      artifacts:
+        dataset:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+  comp-extract-table-to-gcs-op-2:
+    executorLabel: exec-extract-table-to-gcs-op-2
+    inputDefinitions:
+      artifacts:
+        bq_table:
+          artifactType:
+            schemaTitle: system.Artifact
+            schemaVersion: 0.0.1
+      parameters:
+        location:
+          defaultValue: US
+          isOptional: true
+          parameterType: STRING
+    outputDefinitions:
+      artifacts:
+        dataset:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+  comp-extract-table-to-gcs-op-3:
+    executorLabel: exec-extract-table-to-gcs-op-3
+    inputDefinitions:
+      artifacts:
+        bq_table:
+          artifactType:
+            schemaTitle: system.Artifact
+            schemaVersion: 0.0.1
+      parameters:
+        location:
+          defaultValue: US
+          isOptional: true
+          parameterType: STRING
+    outputDefinitions:
+      artifacts:
+        dataset:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+  comp-get-custom-job-results-op:
+    executorLabel: exec-get-custom-job-results-op
+    inputDefinitions:
+      parameters:
+        job_resource:
+          parameterType: STRING
+        location:
+          parameterType: STRING
+        project:
+          parameterType: STRING
+    outputDefinitions:
+      artifacts:
+        metrics:
+          artifactType:
+            schemaTitle: system.Metrics
+            schemaVersion: 0.0.1
+        model:
+          artifactType:
+            schemaTitle: system.Model
+            schemaVersion: 0.0.1
+  comp-get-training-args-dict-op:
+    executorLabel: exec-get-training-args-dict-op
+    inputDefinitions:
+      artifacts:
+        test_data:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+        train_data:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+        valid_data:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+    outputDefinitions:
+      parameters:
+        Output:
+          parameterType: STRUCT
+  comp-get-workerpool-spec-op:
+    executorLabel: exec-get-workerpool-spec-op
+    inputDefinitions:
+      parameters:
+        args:
+          defaultValue: {}
+          isOptional: true
+          parameterType: STRUCT
+        env:
+          defaultValue: {}
+          isOptional: true
+          parameterType: STRUCT
+        worker_pool_specs:
+          parameterType: LIST
+    outputDefinitions:
+      parameters:
+        Output:
+          parameterType: LIST
+  comp-upload-best-model-op:
+    executorLabel: exec-upload-best-model-op
+    inputDefinitions:
+      artifacts:
+        model:
+          artifactType:
+            schemaTitle: system.Model
+            schemaVersion: 0.0.1
+        model_eval_metrics:
+          artifactType:
+            schemaTitle: system.Metrics
+            schemaVersion: 0.0.1
+        test_data:
+          artifactType:
+            schemaTitle: system.Dataset
+            schemaVersion: 0.0.1
+      parameters:
+        eval_lower_is_better:
+          parameterType: BOOLEAN
+        eval_metric:
+          parameterType: STRING
+        evaluation_name:
+          defaultValue: Imported evaluation
+          isOptional: true
+          parameterType: STRING
+        location:
+          parameterType: STRING
+        model_description:
+          isOptional: true
+          parameterType: STRING
+        model_name:
+          parameterType: STRING
+        pipeline_job_id:
+          parameterType: STRING
+        project:
+          parameterType: STRING
+        serving_container_image:
+          parameterType: STRING
+    outputDefinitions:
+      artifacts:
+        vertex_model:
+          artifactType:
+            schemaTitle: google.VertexModel
+            schemaVersion: 0.0.1
+deploymentSpec:
+  executors:
+    exec-bigquery-query-job:
+      container:
+        args:
+        - --type
+        - BigqueryQueryJob
+        - --project
+        - '{{$.inputs.parameters[''project'']}}'
+        - --location
+        - '{{$.inputs.parameters[''location'']}}'
+        - --payload
+        - '{"Concat": ["{", "\"configuration\": {", "\"query\": ", "{{$.inputs.parameters[''job_configuration_query'']}}",
+          ", \"labels\": ", "{{$.inputs.parameters[''labels'']}}", "}", "}"]}'
+        - --job_configuration_query_override
+        - '{"Concat": ["{", "\"query\": \"", "{{$.inputs.parameters[''query'']}}",
+          "\"", ", \"query_parameters\": ", "{{$.inputs.parameters[''query_parameters'']}}",
+          ", \"destination_encryption_configuration\": {", "\"kmsKeyName\": \"", "{{$.inputs.parameters[''encryption_spec_key_name'']}}",
+          "\"}", "}"]}'
+        - --gcp_resources
+        - '{{$.outputs.parameters[''gcp_resources''].output_file}}'
+        - --executor_input
+        - '{{$}}'
+        command:
+        - python3
+        - -u
+        - -m
+        - google_cloud_pipeline_components.container.v1.bigquery.query_job.launcher
+        image: gcr.io/ml-pipeline/google-cloud-pipeline-components:2.14.1
+    exec-bigquery-query-job-2:
+      container:
+        args:
+        - --type
+        - BigqueryQueryJob
+        - --project
+        - '{{$.inputs.parameters[''project'']}}'
+        - --location
+        - '{{$.inputs.parameters[''location'']}}'
+        - --payload
+        - '{"Concat": ["{", "\"configuration\": {", "\"query\": ", "{{$.inputs.parameters[''job_configuration_query'']}}",
+          ", \"labels\": ", "{{$.inputs.parameters[''labels'']}}", "}", "}"]}'
+        - --job_configuration_query_override
+        - '{"Concat": ["{", "\"query\": \"", "{{$.inputs.parameters[''query'']}}",
+          "\"", ", \"query_parameters\": ", "{{$.inputs.parameters[''query_parameters'']}}",
+          ", \"destination_encryption_configuration\": {", "\"kmsKeyName\": \"", "{{$.inputs.parameters[''encryption_spec_key_name'']}}",
+          "\"}", "}"]}'
+        - --gcp_resources
+        - '{{$.outputs.parameters[''gcp_resources''].output_file}}'
+        - --executor_input
+        - '{{$}}'
+        command:
+        - python3
+        - -u
+        - -m
+        - google_cloud_pipeline_components.container.v1.bigquery.query_job.launcher
+        image: gcr.io/ml-pipeline/google-cloud-pipeline-components:2.14.1
+    exec-bigquery-query-job-3:
+      container:
+        args:
+        - --type
+        - BigqueryQueryJob
+        - --project
+        - '{{$.inputs.parameters[''project'']}}'
+        - --location
+        - '{{$.inputs.parameters[''location'']}}'
+        - --payload
+        - '{"Concat": ["{", "\"configuration\": {", "\"query\": ", "{{$.inputs.parameters[''job_configuration_query'']}}",
+          ", \"labels\": ", "{{$.inputs.parameters[''labels'']}}", "}", "}"]}'
+        - --job_configuration_query_override
+        - '{"Concat": ["{", "\"query\": \"", "{{$.inputs.parameters[''query'']}}",
+          "\"", ", \"query_parameters\": ", "{{$.inputs.parameters[''query_parameters'']}}",
+          ", \"destination_encryption_configuration\": {", "\"kmsKeyName\": \"", "{{$.inputs.parameters[''encryption_spec_key_name'']}}",
+          "\"}", "}"]}'
+        - --gcp_resources
+        - '{{$.outputs.parameters[''gcp_resources''].output_file}}'
+        - --executor_input
+        - '{{$}}'
+        command:
+        - python3
+        - -u
+        - -m
+        - google_cloud_pipeline_components.container.v1.bigquery.query_job.launcher
+        image: gcr.io/ml-pipeline/google-cloud-pipeline-components:2.14.1
+    exec-bigquery-query-job-4:
+      container:
+        args:
+        - --type
+        - BigqueryQueryJob
+        - --project
+        - '{{$.inputs.parameters[''project'']}}'
+        - --location
+        - '{{$.inputs.parameters[''location'']}}'
+        - --payload
+        - '{"Concat": ["{", "\"configuration\": {", "\"query\": ", "{{$.inputs.parameters[''job_configuration_query'']}}",
+          ", \"labels\": ", "{{$.inputs.parameters[''labels'']}}", "}", "}"]}'
+        - --job_configuration_query_override
+        - '{"Concat": ["{", "\"query\": \"", "{{$.inputs.parameters[''query'']}}",
+          "\"", ", \"query_parameters\": ", "{{$.inputs.parameters[''query_parameters'']}}",
+          ", \"destination_encryption_configuration\": {", "\"kmsKeyName\": \"", "{{$.inputs.parameters[''encryption_spec_key_name'']}}",
+          "\"}", "}"]}'
+        - --gcp_resources
+        - '{{$.outputs.parameters[''gcp_resources''].output_file}}'
+        - --executor_input
+        - '{{$}}'
+        command:
+        - python3
+        - -u
+        - -m
+        - google_cloud_pipeline_components.container.v1.bigquery.query_job.launcher
+        image: gcr.io/ml-pipeline/google-cloud-pipeline-components:2.14.1
+    exec-custom-training-job:
+      container:
+        args:
+        - --type
+        - CustomJob
+        - --payload
+        - '{"display_name": "{{$.inputs.parameters[''display_name'']}}", "job_spec":
+          {"worker_pool_specs": {{$.inputs.parameters[''worker_pool_specs'']}}, "scheduling":
+          {"timeout": "{{$.inputs.parameters[''timeout'']}}", "restart_job_on_worker_restart":
+          {{$.inputs.parameters[''restart_job_on_worker_restart'']}}}, "service_account":
+          "{{$.inputs.parameters[''service_account'']}}", "tensorboard": "{{$.inputs.parameters[''tensorboard'']}}",
+          "enable_web_access": {{$.inputs.parameters[''enable_web_access'']}}, "network":
+          "{{$.inputs.parameters[''network'']}}", "reserved_ip_ranges": {{$.inputs.parameters[''reserved_ip_ranges'']}},
+          "base_output_directory": {"output_uri_prefix": "{{$.inputs.parameters[''base_output_directory'']}}"}},
+          "labels": {{$.inputs.parameters[''labels'']}}, "encryption_spec": {"kms_key_name":
+          "{{$.inputs.parameters[''encryption_spec_key_name'']}}"}}'
+        - --project
+        - '{{$.inputs.parameters[''project'']}}'
+        - --location
+        - '{{$.inputs.parameters[''location'']}}'
+        - --gcp_resources
+        - '{{$.outputs.parameters[''gcp_resources''].output_file}}'
+        command:
+        - python3
+        - -u
+        - -m
+        - google_cloud_pipeline_components.container.v1.custom_job.launcher
+        image: gcr.io/ml-pipeline/google-cloud-pipeline-components:2.14.1
+    exec-extract-table-to-gcs-op:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - extract_table_to_gcs_op
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.7.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&\
+          \  python3 -m pip install --quiet --no-warn-script-location 'google-cloud-bigquery==3.24.0'\
+          \ && \"$0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef extract_table_to_gcs_op(\n    bq_table: Input[Artifact],\n  \
+          \  dataset: Output[Dataset],\n    location: str = \"US\",\n) -> None:\n\
+          \    \"\"\"\n    Extract a Big Query table into Google Cloud Storage.\n\
+          \    \"\"\"\n\n    import logging\n    import os\n    import google.cloud.bigquery\
+          \ as bq\n\n    project_id = bq_table.metadata[\"projectId\"]\n    dataset_id\
+          \ = bq_table.metadata[\"datasetId\"]\n    table_id= bq_table.metadata[\"\
+          tableId\"]\n\n\n    # Get the table generated on the previous component\n\
+          \    full_table_id = f\"{project_id}.{dataset_id}.{table_id}\"\n    table\
+          \ = bq.table.Table(table_ref=full_table_id)\n\n    # Initiate the Big Query\
+          \ client to connect with the project\n    job_config = bq.job.ExtractJobConfig(**{})\n\
+          \    client = bq.client.Client(project=project_id, location=location)\n\n\
+          \    # Submit the extract table job to store on GCS\n    extract_job = client.extract_table(table,\
+          \ dataset.uri)\n\n"
+        image: python:3.10.14
+    exec-extract-table-to-gcs-op-2:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - extract_table_to_gcs_op
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.7.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&\
+          \  python3 -m pip install --quiet --no-warn-script-location 'google-cloud-bigquery==3.24.0'\
+          \ && \"$0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef extract_table_to_gcs_op(\n    bq_table: Input[Artifact],\n  \
+          \  dataset: Output[Dataset],\n    location: str = \"US\",\n) -> None:\n\
+          \    \"\"\"\n    Extract a Big Query table into Google Cloud Storage.\n\
+          \    \"\"\"\n\n    import logging\n    import os\n    import google.cloud.bigquery\
+          \ as bq\n\n    project_id = bq_table.metadata[\"projectId\"]\n    dataset_id\
+          \ = bq_table.metadata[\"datasetId\"]\n    table_id= bq_table.metadata[\"\
+          tableId\"]\n\n\n    # Get the table generated on the previous component\n\
+          \    full_table_id = f\"{project_id}.{dataset_id}.{table_id}\"\n    table\
+          \ = bq.table.Table(table_ref=full_table_id)\n\n    # Initiate the Big Query\
+          \ client to connect with the project\n    job_config = bq.job.ExtractJobConfig(**{})\n\
+          \    client = bq.client.Client(project=project_id, location=location)\n\n\
+          \    # Submit the extract table job to store on GCS\n    extract_job = client.extract_table(table,\
+          \ dataset.uri)\n\n"
+        image: python:3.10.14
+    exec-extract-table-to-gcs-op-3:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - extract_table_to_gcs_op
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.7.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&\
+          \  python3 -m pip install --quiet --no-warn-script-location 'google-cloud-bigquery==3.24.0'\
+          \ && \"$0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef extract_table_to_gcs_op(\n    bq_table: Input[Artifact],\n  \
+          \  dataset: Output[Dataset],\n    location: str = \"US\",\n) -> None:\n\
+          \    \"\"\"\n    Extract a Big Query table into Google Cloud Storage.\n\
+          \    \"\"\"\n\n    import logging\n    import os\n    import google.cloud.bigquery\
+          \ as bq\n\n    project_id = bq_table.metadata[\"projectId\"]\n    dataset_id\
+          \ = bq_table.metadata[\"datasetId\"]\n    table_id= bq_table.metadata[\"\
+          tableId\"]\n\n\n    # Get the table generated on the previous component\n\
+          \    full_table_id = f\"{project_id}.{dataset_id}.{table_id}\"\n    table\
+          \ = bq.table.Table(table_ref=full_table_id)\n\n    # Initiate the Big Query\
+          \ client to connect with the project\n    job_config = bq.job.ExtractJobConfig(**{})\n\
+          \    client = bq.client.Client(project=project_id, location=location)\n\n\
+          \    # Submit the extract table job to store on GCS\n    extract_job = client.extract_table(table,\
+          \ dataset.uri)\n\n"
+        image: python:3.10.14
+    exec-get-custom-job-results-op:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - get_custom_job_results_op
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.7.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&\
+          \  python3 -m pip install --quiet --no-warn-script-location 'google-cloud-pipeline-components==2.14.1'\
+          \ 'google-cloud-aiplatform==1.55.0' && \"$0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef get_custom_job_results_op(\n    project: str,\n    location:\
+          \ str,\n    job_resource: str,\n    model: Output[Model],\n    metrics:\
+          \ Output[Metrics],\n):\n    import json\n    import shutil\n    from pathlib\
+          \ import Path\n    import google.cloud.aiplatform as aip\n    from google.protobuf.json_format\
+          \ import Parse\n    from google_cloud_pipeline_components.proto.gcp_resources_pb2\
+          \ import GcpResources\n\n    aip.init(project=project, location=location)\n\
+          \n    training_gcp_resources = Parse(job_resource, GcpResources())\n   \
+          \ custom_job_id = training_gcp_resources.resources[0].resource_uri\n   \
+          \ custom_job_name = custom_job_id[custom_job_id.find(\"project\"):]\n\n\
+          \    job_resource = aip.CustomJob.get(custom_job_name).gca_resource\n\n\
+          \    job_base_dir = job_resource.job_spec.base_output_directory.output_uri_prefix\n\
+          \n\n    job_base_dir_fuse = job_base_dir.replace(\"gs://\", \"/gcs/\")\n\
+          \    model_uri_fuse = model.uri.replace(\"gs://\", \"/gcs/\")\n\n\n    shutil.copytree(f\"\
+          {job_base_dir_fuse}/model\", Path(model_uri_fuse), dirs_exist_ok=True)\n\
+          \n\n\n    with open(f\"{job_base_dir_fuse}/metrics/metrics.json\") as fh:\n\
+          \        metrics_dict = json.load(fh)\n\n    for k, v in metrics_dict.items():\n\
+          \        metrics.log_metric(k, v)\n\n    with open(metrics.path, \"w\")\
+          \ as fh:\n        json.dump(metrics_dict, fh)\n\n    shutil.rmtree(f\"{job_base_dir_fuse}/model\"\
+          )\n    shutil.rmtree(f\"{job_base_dir_fuse}/metrics\")\n\n"
+        image: python:3.10.14
+    exec-get-training-args-dict-op:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - get_training_args_dict_op
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.7.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef get_training_args_dict_op(\n    train_data: Input[Dataset],\n\
+          \    valid_data: Input[Dataset],\n    test_data: Input[Dataset],\n) -> dict:\n\
+          \    return dict(\n        train_data=train_data.path,\n        valid_data=valid_data.path,\n\
+          \        test_data=test_data.path,\n    )\n\n"
+        image: python:3.10.14
+    exec-get-workerpool-spec-op:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - get_workerpool_spec_op
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.7.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"' && \"\
+          $0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef get_workerpool_spec_op(\n    worker_pool_specs: list,\n    args:\
+          \ dict = {},\n    env: dict = {},\n) -> list:\n\n    for spec in worker_pool_specs:\n\
+          \        if \"args\" not in spec[\"container_spec\"]:\n            spec[\"\
+          container_spec\"][\"args\"] = []\n        for k, v in args.items():\n  \
+          \          spec[\"container_spec\"][\"args\"].append(f\"--{k.replace('_',\
+          \ '-')}={v}\")\n        if env:\n            if \"env\" not in spec[\"container_spec\"\
+          ]:\n                spec[\"container_spec\"][\"env\"] = []\n           \
+          \ for k, v in env.items():\n                spec[\"container_spec\"][\"\
+          env\"].append(dict(name=k, value=v))\n\n    return worker_pool_specs\n\n"
+        image: python:3.10.14
+    exec-upload-best-model-op:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - upload_best_model_op
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet --no-warn-script-location 'kfp==2.7.0'\
+          \ '--no-deps' 'typing-extensions>=3.7.4,<5; python_version<\"3.9\"'  &&\
+          \  python3 -m pip install --quiet --no-warn-script-location 'google-cloud-aiplatform==1.55.0'\
+          \ 'google-cloud-pipeline-components==2.14.1' && \"$0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          _KFP_RUNTIME=true python3 -m kfp.dsl.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\nfrom google_cloud_pipeline_components.types.artifact_types import VertexModel\n\
+          \ndef upload_best_model_op(\n    model: Input[Model],\n    test_data: Input[Dataset],\n\
+          \    model_eval_metrics: Input[Metrics],\n    vertex_model: Output[VertexModel],\n\
+          \    project: str,\n    location: str,\n    model_name: str,\n    eval_metric:\
+          \ str,\n    eval_lower_is_better: bool,\n    pipeline_job_id: str,\n   \
+          \ serving_container_image: str,\n    model_description: str = None,\n  \
+          \  evaluation_name: str = \"Imported evaluation\",\n) -> None:\n    \"\"\
+          \"\n    Args:\n        model (Model): Input challenger model.\n        test_data\
+          \ (Dataset): Test dataset used for evaluating challenger model.\n      \
+          \  vertex_model (VertexModel): Output model uploaded to Vertex AI Model\
+          \ Registry.\n        model_eval_metricsn (Metrics): Evaluation metrics of\
+          \ challenger model.\n        project (str): project id of the Google Cloud\
+          \ project.\n        location (str): location of the Google Cloud project.\n\
+          \        pipeline_job_id (str):\n        model_name (str): Name of champion\
+          \ and challenger model in\n            Vertex AI Model Registry.\n     \
+          \   eval_metric (str): Metric name to compare champion and challenger on.\n\
+          \        eval_lower_is_better (bool): Usually True for losses and\n    \
+          \        False for classification metrics.\n        serving_container_image\
+          \ (str): Container URI for serving the model.\n        model_description\
+          \ (str): Optional. Description of model.\n        evaluation_name (str):\
+          \ Optional. Name of evaluation results which are\n            displayed\
+          \ in the Vertex AI UI of the challenger model.\n    \"\"\"\n\n    import\
+          \ json\n    import logging\n    import google.cloud.aiplatform as aip\n\
+          \    from google.protobuf.json_format import MessageToDict\n    from google.cloud.aiplatform_v1\
+          \ import ModelEvaluation, ModelServiceClient\n    from google.protobuf.json_format\
+          \ import ParseDict\n\n    def lookup_model(model_name: str) -> aip.Model:\n\
+          \        \"\"\"Look up model in model registry.\"\"\"\n        logging.info(f\"\
+          listing models with display name {model_name}\")\n        models = aip.Model.list(\n\
+          \            filter=f'display_name=\"{model_name}\"',\n            location=location,\n\
+          \            project=project,\n        )\n        logging.info(f\"found\
+          \ {len(models)} models\")\n\n        if len(models) == 0:\n            logging.info(\n\
+          \                f\"No model found with name {model_name}\"\n          \
+          \      + f\"(project: {project} location: {location})\"\n            )\n\
+          \            return None\n        elif len(models) == 1:\n            return\
+          \ models[0]\n        else:\n            raise RuntimeError(f\"Multiple models\
+          \ with name {model_name} were found.\")\n\n    def compare_models(\n   \
+          \     champion_metrics: dict,\n        challenger_metrics: dict,\n     \
+          \   eval_lower_is_better: bool,\n    ) -> bool:\n        \"\"\"Compare models\
+          \ by evaluating a primary metric.\"\"\"\n        logging.info(f\"Comparing\
+          \ {eval_metric} of models\")\n        logging.debug(f\"Champion metrics:\
+          \ {champion_metrics}\")\n        logging.debug(f\"Challenger metrics: {challenger_metrics}\"\
+          )\n\n        m_champ = champion_metrics[eval_metric]\n        m_chall =\
+          \ challenger_metrics[eval_metric]\n        logging.info(f\"Champion={m_champ}\
+          \ Challenger={m_chall}\")\n\n        challenger_wins = (\n            (m_chall\
+          \ < m_champ) if eval_lower_is_better else (m_chall > m_champ)\n        )\n\
+          \        logging.info(f\"{'Challenger' if challenger_wins else 'Champion'}\
+          \ wins!\")\n\n        return challenger_wins\n\n    def upload_model_to_registry(\n\
+          \        is_default_version: bool, parent_model_uri: str = None\n    ) ->\
+          \ Model:\n        \"\"\"Upload model to registry.\"\"\"\n        logging.info(f\"\
+          Uploading model {model_name} (default: {is_default_version}\")\n       \
+          \ uploaded_model = aip.Model.upload(\n            display_name=model_name,\n\
+          \            description=model_description,\n            artifact_uri=model.uri,\n\
+          \            serving_container_image_uri=serving_container_image,\n    \
+          \        parent_model=parent_model_uri,\n            is_default_version=is_default_version,\n\
+          \        )\n        logging.info(f\"Uploaded model {uploaded_model}\")\n\
+          \n        # Output google.VertexModel artifact\n        vertex_model.uri\
+          \ = (\n            f\"https://{location}-aiplatform.googleapis.com/v1/\"\
+          \n            f\"{uploaded_model.versioned_resource_name}\"\n        )\n\
+          \        vertex_model.metadata[\"resourceName\"] = uploaded_model.versioned_resource_name\n\
+          \n        return uploaded_model\n\n    def import_evaluation(\n        parsed_metrics:\
+          \ dict,\n        challenger_model: aip.Model,\n        evaluation_name:\
+          \ str,\n    ) -> str:\n        \"\"\"Import model evaluation.\"\"\"\n  \
+          \      logging.info(f\"Evaluation metrics: {parsed_metrics}\")\n       \
+          \ problem_type = parsed_metrics.pop(\"problemType\")\n        schema = (\n\
+          \            f\"gs://google-cloud-aiplatform/schema/modelevaluation/\"\n\
+          \            f\"{problem_type}_metrics_1.0.0.yaml\"\n        )\n       \
+          \ evaluation = {\n            \"displayName\": evaluation_name,\n      \
+          \      \"metricsSchemaUri\": schema,\n            \"metrics\": parsed_metrics,\n\
+          \            \"metadata\": {\n                \"pipeline_job_id\": pipeline_job_id,\n\
+          \                \"evaluation_dataset_type\": \"gcs\",\n               \
+          \ \"evaluation_dataset_path\": [test_data.uri],\n            },\n      \
+          \  }\n\n        request = ParseDict(evaluation, ModelEvaluation()._pb)\n\
+          \        logging.debug(f\"Request: {request}\")\n        challenger_name\
+          \ = challenger_model.versioned_resource_name\n        client = ModelServiceClient(\n\
+          \            client_options={\"api_endpoint\": location + \"-aiplatform.googleapis.com\"\
+          }\n        )\n        logging.info(f\"Uploading model evaluation for {challenger_name}\"\
+          )\n        response = client.import_model_evaluation(\n            parent=challenger_name,\n\
+          \            model_evaluation=request,\n        )\n        logging.debug(f\"\
+          Response: {response}\")\n        return response.name\n\n    # Parse metrics\
+          \ to dict\n    with open(model_eval_metrics.path, \"r\") as f:\n       \
+          \ challenger_metrics = json.load(f)\n\n    champion_model = lookup_model(model_name=model_name)\n\
+          \n    challenger_wins = True\n    parent_model_uri = None\n    if champion_model\
+          \ is None:\n        logging.info(\"No champion model found, uploading new\
+          \ model.\")\n    else:\n        # Compare models\n        logging.info(\n\
+          \            f\"Model default version {champion_model.version_id} \"\n \
+          \           \"is being challenged by new model.\"\n        )\n        #\
+          \ Look up Vertex model evaluation for champion model\n        champion_eval\
+          \ = champion_model.get_model_evaluation()\n        champion_metrics = MessageToDict(champion_eval._gca_resource._pb)[\"\
+          metrics\"]\n\n        challenger_wins = compare_models(\n            champion_metrics=champion_metrics,\n\
+          \            challenger_metrics=challenger_metrics,\n            eval_lower_is_better=eval_lower_is_better,\n\
+          \        )\n        parent_model_uri = champion_model.resource_name\n\n\
+          \    model = upload_model_to_registry(challenger_wins, parent_model_uri)\n\
+          \    import_evaluation(\n        parsed_metrics=challenger_metrics,\n  \
+          \      challenger_model=model,\n        evaluation_name=evaluation_name,\n\
+          \    )\n\n"
+        image: python:3.10
+pipelineInfo:
+  description: "Training pipeline which:\n1. Preprocesses data in BigQuery\n 2. Extracts\
+    \ data to Cloud Storage\n 3. Trains a model using a custom prebuilt container\n\
+    \ 4. Uploads the model to Model Registry\n 5. Evaluates the model against a champion\
+    \ model\n 6. Selects a new champion based on the primary metrics"
+  name: taxifare-training-pipeline
+root:
+  dag:
+    outputs:
+      artifacts:
+        get-custom-job-results-op-metrics:
+          artifactSelectors:
+          - outputArtifactKey: metrics
+            producerSubtask: get-custom-job-results-op
+    tasks:
+      bigquery-query-job:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-bigquery-query-job
+        inputs:
+          parameters:
+            location:
+              runtimeValue:
+                constant: US
+            pipelinechannel--bq_location:
+              componentInputParameter: bq_location
+            pipelinechannel--bq_source_uri:
+              componentInputParameter: bq_source_uri
+            pipelinechannel--dataset:
+              componentInputParameter: dataset
+            pipelinechannel--project:
+              componentInputParameter: project
+            pipelinechannel--timestamp:
+              componentInputParameter: timestamp
+            project:
+              componentInputParameter: project
+            query:
+              runtimeValue:
+                constant: "\n\n-- Create dataset if it doesn't exist\nCREATE SCHEMA\
+                  \ IF NOT EXISTS `{{$.inputs.parameters['pipelinechannel--project']}}.{{$.inputs.parameters['pipelinechannel--dataset']}}`\n\
+                  \  OPTIONS (\n    description = 'Chicago Taxi Trips with Production-ready\
+                  \ MLops on GCP Template',\n    location = '{{$.inputs.parameters['pipelinechannel--bq_location']}}');\n\
+                  \n-- Create (or replace) table with preprocessed data\nDROP TABLE\
+                  \ IF EXISTS `{{$.inputs.parameters['pipelinechannel--project']}}.{{$.inputs.parameters['pipelinechannel--dataset']}}.preprocessed_data`;\n\
+                  CREATE TABLE `{{$.inputs.parameters['pipelinechannel--project']}}.{{$.inputs.parameters['pipelinechannel--dataset']}}.preprocessed_data`\
+                  \ AS (\nWITH start_timestamps AS (\nSELECT\n\tIF('{{$.inputs.parameters['pipelinechannel--timestamp']}}'\
+                  \ = '',\n\tCURRENT_DATETIME(),\n\tCAST('{{$.inputs.parameters['pipelinechannel--timestamp']}}'\
+                  \ AS DATETIME)) AS start_timestamp\n)\n-- Ingest data between 2\
+                  \ and 3 months ago\n,filtered_data AS (\n    SELECT\n    *\n   \
+                  \ FROM `{{$.inputs.parameters['pipelinechannel--bq_source_uri']}}`,\
+                  \ start_timestamps\n    WHERE\n         DATE(trip_start_timestamp)\
+                  \ BETWEEN\n         DATE_SUB(DATE(CAST(start_timestamps.start_timestamp\
+                  \ AS DATETIME)), INTERVAL 3 MONTH) AND\n         DATE_SUB(DATE(start_timestamp),\
+                  \ INTERVAL 2 MONTH)\n)\n-- Use the average trip_seconds as a replacement\
+                  \ for NULL or 0 values\n,mean_time AS (\n    SELECT CAST(avg(trip_seconds)\
+                  \ AS INT64) as avg_trip_seconds\n    FROM filtered_data\n)\n\nSELECT\n\
+                  \    CAST(EXTRACT(DAYOFWEEK FROM trip_start_timestamp) AS FLOAT64)\
+                  \ AS dayofweek,\n    CAST(EXTRACT(HOUR FROM trip_start_timestamp)\
+                  \ AS FLOAT64) AS hourofday,\n    ST_DISTANCE(\n        ST_GEOGPOINT(pickup_longitude,\
+                  \ pickup_latitude),\n        ST_GEOGPOINT(dropoff_longitude, dropoff_latitude))\
+                  \ AS trip_distance,\n    trip_miles,\n    CAST( CASE WHEN trip_seconds\
+                  \ is NULL then m.avg_trip_seconds\n               WHEN trip_seconds\
+                  \ <= 0 then m.avg_trip_seconds\n               ELSE trip_seconds\n\
+                  \               END AS FLOAT64) AS trip_seconds,\n    payment_type,\n\
+                  \    company,\n    \n    (fare + tips + tolls + extras) AS `total_fare`,\n\
+                  \    \nFROM filtered_data AS t, mean_time AS m\nWHERE\n    trip_miles\
+                  \ > 0 AND fare > 0 AND fare < 1500\n    \n        AND `fare` IS\
+                  \ NOT NULL\n    \n        AND `trip_start_timestamp` IS NOT NULL\n\
+                  \    \n        AND `pickup_longitude` IS NOT NULL\n    \n      \
+                  \  AND `pickup_latitude` IS NOT NULL\n    \n        AND `dropoff_longitude`\
+                  \ IS NOT NULL\n    \n        AND `dropoff_latitude` IS NOT NULL\n\
+                  \    \n        AND `payment_type` IS NOT NULL\n    \n        AND\
+                  \ `company` IS NOT NULL\n    \n);"
+        taskInfo:
+          name: Ingest & preprocess data
+      bigquery-query-job-2:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-bigquery-query-job-2
+        dependentTasks:
+        - bigquery-query-job
+        inputs:
+          parameters:
+            location:
+              componentInputParameter: bq_location
+            pipelinechannel--dataset:
+              componentInputParameter: dataset
+            pipelinechannel--project:
+              componentInputParameter: project
+            project:
+              componentInputParameter: project
+            query:
+              runtimeValue:
+                constant: "SELECT *\nFROM\n `.{{$.inputs.parameters['pipelinechannel--project']}}.{{$.inputs.parameters['pipelinechannel--dataset']}}.preprocessed_data`\
+                  \ AS t\nWHERE\n    MOD(ABS(FARM_FINGERPRINT(TO_JSON_STRING(t))),\n\
+                  \        10) IN (0, 1, 2, 3, 4, 5, 6, 7)"
+        taskInfo:
+          name: Split train data
+      bigquery-query-job-3:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-bigquery-query-job-3
+        dependentTasks:
+        - bigquery-query-job
+        inputs:
+          parameters:
+            location:
+              componentInputParameter: bq_location
+            pipelinechannel--dataset:
+              componentInputParameter: dataset
+            pipelinechannel--project:
+              componentInputParameter: project
+            project:
+              componentInputParameter: project
+            query:
+              runtimeValue:
+                constant: "SELECT *\nFROM\n `.{{$.inputs.parameters['pipelinechannel--project']}}.{{$.inputs.parameters['pipelinechannel--dataset']}}.preprocessed_data`\
+                  \ AS t\nWHERE\n    MOD(ABS(FARM_FINGERPRINT(TO_JSON_STRING(t))),\n\
+                  \        10) IN (8)"
+        taskInfo:
+          name: Split valid data
+      bigquery-query-job-4:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-bigquery-query-job-4
+        dependentTasks:
+        - bigquery-query-job
+        inputs:
+          parameters:
+            location:
+              componentInputParameter: bq_location
+            pipelinechannel--dataset:
+              componentInputParameter: dataset
+            pipelinechannel--project:
+              componentInputParameter: project
+            project:
+              componentInputParameter: project
+            query:
+              runtimeValue:
+                constant: "SELECT *\nFROM\n `.{{$.inputs.parameters['pipelinechannel--project']}}.{{$.inputs.parameters['pipelinechannel--dataset']}}.preprocessed_data`\
+                  \ AS t\nWHERE\n    MOD(ABS(FARM_FINGERPRINT(TO_JSON_STRING(t))),\n\
+                  \        10) IN (8)"
+        taskInfo:
+          name: Split test data
+      custom-training-job:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-custom-training-job
+        dependentTasks:
+        - get-workerpool-spec-op
+        inputs:
+          parameters:
+            base_output_directory:
+              componentInputParameter: base_output_dir
+            display_name:
+              componentInputParameter: training_job_display_name
+            location:
+              componentInputParameter: location
+            project:
+              componentInputParameter: project
+            worker_pool_specs:
+              taskOutputParameter:
+                outputParameterKey: Output
+                producerTask: get-workerpool-spec-op
+        taskInfo:
+          name: custom-training-job
+      extract-table-to-gcs-op:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-extract-table-to-gcs-op
+        dependentTasks:
+        - bigquery-query-job-2
+        inputs:
+          artifacts:
+            bq_table:
+              taskOutputArtifact:
+                outputArtifactKey: destination_table
+                producerTask: bigquery-query-job-2
+        taskInfo:
+          name: Extract training data from BigQuery to GCS
+      extract-table-to-gcs-op-2:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-extract-table-to-gcs-op-2
+        dependentTasks:
+        - bigquery-query-job-3
+        inputs:
+          artifacts:
+            bq_table:
+              taskOutputArtifact:
+                outputArtifactKey: destination_table
+                producerTask: bigquery-query-job-3
+        taskInfo:
+          name: Extract validation data from BigQuery to GCS
+      extract-table-to-gcs-op-3:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-extract-table-to-gcs-op-3
+        dependentTasks:
+        - bigquery-query-job-4
+        inputs:
+          artifacts:
+            bq_table:
+              taskOutputArtifact:
+                outputArtifactKey: destination_table
+                producerTask: bigquery-query-job-4
+        taskInfo:
+          name: Extract test data from BigQuery to GCS
+      get-custom-job-results-op:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-get-custom-job-results-op
+        dependentTasks:
+        - custom-training-job
+        inputs:
+          parameters:
+            job_resource:
+              taskOutputParameter:
+                outputParameterKey: gcp_resources
+                producerTask: custom-training-job
+            location:
+              componentInputParameter: location
+            project:
+              componentInputParameter: project
+        taskInfo:
+          name: Get-Training-Results
+      get-training-args-dict-op:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-get-training-args-dict-op
+        dependentTasks:
+        - extract-table-to-gcs-op
+        - extract-table-to-gcs-op-2
+        - extract-table-to-gcs-op-3
+        inputs:
+          artifacts:
+            test_data:
+              taskOutputArtifact:
+                outputArtifactKey: dataset
+                producerTask: extract-table-to-gcs-op-3
+            train_data:
+              taskOutputArtifact:
+                outputArtifactKey: dataset
+                producerTask: extract-table-to-gcs-op
+            valid_data:
+              taskOutputArtifact:
+                outputArtifactKey: dataset
+                producerTask: extract-table-to-gcs-op-2
+        taskInfo:
+          name: Get-Training-Args
+      get-workerpool-spec-op:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-get-workerpool-spec-op
+        dependentTasks:
+        - get-training-args-dict-op
+        inputs:
+          parameters:
+            args:
+              taskOutputParameter:
+                outputParameterKey: Output
+                producerTask: get-training-args-dict-op
+            worker_pool_specs:
+              runtimeValue:
+                constant:
+                - container_spec:
+                    image_uri: us-central1-docker.pkg.dev/mlops-learning-422012/pipelineimages/taxifare_training_container:v3
+                  machine_spec:
+                    machine_type: n1-standard-4
+                  replica_count: 1.0
+        taskInfo:
+          name: Get-Training-Worker-Pool-Spec
+      upload-best-model-op:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-upload-best-model-op
+        dependentTasks:
+        - extract-table-to-gcs-op-3
+        - get-custom-job-results-op
+        inputs:
+          artifacts:
+            model:
+              taskOutputArtifact:
+                outputArtifactKey: model
+                producerTask: get-custom-job-results-op
+            model_eval_metrics:
+              taskOutputArtifact:
+                outputArtifactKey: metrics
+                producerTask: get-custom-job-results-op
+            test_data:
+              taskOutputArtifact:
+                outputArtifactKey: dataset
+                producerTask: extract-table-to-gcs-op-3
+          parameters:
+            eval_lower_is_better:
+              runtimeValue:
+                constant: true
+            eval_metric:
+              runtimeValue:
+                constant: rootMeanSquaredError
+            location:
+              componentInputParameter: location
+            model_description:
+              runtimeValue:
+                constant: Predict price of a taxi trip.
+            model_name:
+              componentInputParameter: model_name
+            pipeline_job_id:
+              runtimeValue:
+                constant: '{{$.pipeline_job_name}}'
+            project:
+              componentInputParameter: project
+            serving_container_image:
+              runtimeValue:
+                constant: us-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-11:latest
+        taskInfo:
+          name: Upload model
+  inputDefinitions:
+    parameters:
+      base_output_dir:
+        defaultValue: ''
+        isOptional: true
+        parameterType: STRING
+      bq_location:
+        defaultValue: US
+        description: location of dataset in BigQuery
+        isOptional: true
+        parameterType: STRING
+      bq_source_uri:
+        defaultValue: bigquery-public-data.chicago_taxi_trips.taxi_trips
+        description: '`<project>.<dataset>.<table>` of ingestion data in BigQuery'
+        isOptional: true
+        parameterType: STRING
+      dataset:
+        defaultValue: taxi_trips_dataset
+        description: dataset id to store staging data & predictions in BigQuery
+        isOptional: true
+        parameterType: STRING
+      image_uri:
+        defaultValue: ''
+        isOptional: true
+        parameterType: STRING
+      location:
+        defaultValue: us-central1
+        description: location of the Google Cloud project
+        isOptional: true
+        parameterType: STRING
+      model_name:
+        defaultValue: taxi-traffic-model
+        description: name of model
+        isOptional: true
+        parameterType: STRING
+      project:
+        defaultValue: mlops-learning-422012
+        description: project id of the Google Cloud project
+        isOptional: true
+        parameterType: STRING
+      test_data_gcs_uri:
+        defaultValue: ''
+        description: Optional. GCS URI of static held-out test dataset.
+        isOptional: true
+        parameterType: STRING
+      timestamp:
+        defaultValue: '2022-12-01 00:00:00'
+        description: "Optional. Empty or a specific timestamp in ISO 8601 format\n\
+          (YYYY-MM-DDThh:mm:ss.sss\xB1hh:mm or YYYY-MM-DDThh:mm:ss).\nIf any time\
+          \ part is missing, it will be regarded as zero."
+        isOptional: true
+        parameterType: STRING
+      training_job_display_name:
+        defaultValue: ''
+        isOptional: true
+        parameterType: STRING
+  outputDefinitions:
+    artifacts:
+      get-custom-job-results-op-metrics:
+        artifactType:
+          schemaTitle: system.Metrics
+          schemaVersion: 0.0.1
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.7.0
