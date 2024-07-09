@@ -1,20 +1,16 @@
 if __name__ == "__main__":
     from google.cloud import aiplatform
+    from os import environ as env
 
-    REGION='us-central1'
-    BUCKET='mlops_pipeline_t'
-    BUCKET_URI=f"gs://{BUCKET}"
-    MODEL_DIR=f"gs://{BUCKET}/model"
-    PROJECT_ID="mlops-learning-422012"
-    project = 'mlops-learning-422012'
-    location= "us-central1"
+    project = env.get("VERTEX_PROJECT_ID")
+    location = env.get("VERTEX_LOCATION")
+    bucket_uri = env.get("BUCKET_URI")
 
     parameters = {
-        "project": PROJECT_ID,
-        "location": REGION,
+        "project": project,
+        "location": location,
         "training_job_display_name": "taxifare-training-job",
-        "base_output_dir": BUCKET_URI,
-        #"model_dir": MODEL_DIR,
+        "base_output_dir": bucket_uri,
     }
 
     aiplatform.init(project=project, location=location)
@@ -23,8 +19,8 @@ if __name__ == "__main__":
         display_name="taxifare-pipeline",
         template_path="taxifare-pipeline.yaml",
         parameter_values=parameters,
-        pipeline_root=BUCKET_URI,
-        enable_caching=False,
+        pipeline_root=bucket_uri,
+        enable_caching=True,
         location="us-central1",
     )
 
