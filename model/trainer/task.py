@@ -32,5 +32,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     params = args.__dict__
 
-    print(params)
     model.train_and_evaluate(params)
