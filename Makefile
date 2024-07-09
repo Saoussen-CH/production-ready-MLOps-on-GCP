@@ -47,4 +47,4 @@ run: ## Run a pipeline. Optionally set compile=<true|false> (default=true), buil
 	echo "# Run training pipeline" && \
 	echo "################################################################################" && \
 	cd pipelines/src && \
-	poetry run python -m pipelines.training.utils.trigger_pipeline --template_path=./taxifare-pipeline.yaml
+	poetry run python -m pipelines.training.utils.trigger_pipeline --template_path=./taxifare-pipeline.yaml --display_name=taxifare-pipeline
