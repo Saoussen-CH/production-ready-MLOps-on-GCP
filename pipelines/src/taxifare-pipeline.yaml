@@ -1351,7 +1351,7 @@ root:
               runtimeValue:
                 constant:
                 - container_spec:
-                    image_uri: us-central1-docker.pkg.dev/mlops-learning-422012/pipelineimages/taxifare_training_container:v3
+                    image_uri: us-central1-docker.pkg.dev/mlops-learning-422012/mlops-docker-repo/taxifare_training_container:v1
                   machine_spec:
                     machine_type: n1-standard-4
                   replica_count: 1.0
