@@ -161,3 +161,13 @@ cython_debug/
 
 # env.sh (only example file should be committed)
 env.sh
+
+# VS code configurations
+.vscode
+
+# Compiled pipelines
+**/*pipeline.json
+**/*pipeline.yaml
+
+# ruff
+.ruff_cache/
