@@ -19,7 +19,7 @@ from pipelines.training.utils.query import generate_query
 
 
 # custom container
-ARTIFACT_REGISTERY = env.get("CONTAINER_IMAGE_REGISTRY")
+ARTIFACT_REGISTERY = env.get("CONTAINER_IMAGE_AR")
 IMAGE_NAME = env.get("IMAGE_NAME")
 IMAGE_TAG = env.get("IMAGE_TAG")
 

@@ -14,7 +14,7 @@ def trigger_pipeline(
         display_name (str): Display name to use for the PipelineJob
 
     Returns:
-        aiplatform.pipeline_jobs.PipelineJob: the Vertex PipelineJob object
+        aiplatform.pipeline_jobs.PipelineJob: the Vertex PipeliclearneJob object
     """
 
     project = env.get("VERTEX_PROJECT_ID")
