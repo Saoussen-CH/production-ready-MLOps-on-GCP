@@ -166,9 +166,8 @@ env.sh
 .vscode
 
 # Compiled pipelines
-**/*pipeline.json
-**/*pipeline.yaml
 */*pipeline.yaml
+*/*pipeline.json
 
 # ruff
 .ruff_cache/

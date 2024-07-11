@@ -6,6 +6,7 @@ import argparse
 def trigger_pipeline(
     template_path: str,
     display_name: str,
+    type: str,
 ) -> aiplatform.pipeline_jobs.PipelineJob:
     """Trigger a Vertex Pipeline run from a (local) compiled pipeline definition.
 
@@ -21,12 +22,16 @@ def trigger_pipeline(
     location = env.get("VERTEX_LOCATION")
     bucket_uri = env.get("BUCKET_URI")
 
-    parameters = {
-        "project": project,
-        "location": location,
-        "training_job_display_name": f"{display_name}-training-job",
-        "base_output_dir": bucket_uri,
-    }
+    if type == "training":
+        parameters = {
+            "project": project,
+            "location": location,
+            "training_job_display_name": f"{display_name}-training-job",
+            "base_output_dir": bucket_uri,
+        }
+
+    else:
+        parameters = {}
 
     aiplatform.init(project=project, location=location)
 
@@ -59,9 +64,16 @@ if __name__ == "__main__":
         type=str,
     )
 
+    parser.add_argument(
+        "--type",
+        help="Type of the pipeline to tirgger <training/prediction>",
+        type=str,
+    )
+
     args = parser.parse_args()
 
     trigger_pipeline(
         template_path=args.template_path,
         display_name=args.display_name,
+        type=args.type,
     )

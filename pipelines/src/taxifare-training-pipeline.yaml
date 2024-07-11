@@ -9,14 +9,12 @@
 #               6. Selects a new champion based on the primary metrics
 # Inputs:
 #    base_output_dir: str [Default: '']
-#    bq_location: str
+#    bq_location: str [Default: 'US']
 #    bq_source_uri: str [Default: 'bigquery-public-data.chicago_taxi_trips.taxi_trips']
 #    dataset: str [Default: 'taxi_trips_dataset']
-#    image_uri: str [Default: '']
-#    location: str
+#    location: str [Default: 'us-central1']
 #    model_name: str [Default: 'taxi-traffic-model']
-#    project: str
-#    test_data_gcs_uri: str [Default: '']
+#    project: str [Default: 'mlops-learning-422012']
 #    timestamp: str [Default: '2022-12-01 00:00:00']
 #    training_job_display_name: str [Default: '']
 # Outputs:
@@ -1351,7 +1349,7 @@ root:
               runtimeValue:
                 constant:
                 - container_spec:
-                    image_uri: None/None:None
+                    image_uri: us-central1-docker.pkg.dev/mlops-learning-422012/mlops-docker-repo/taxifare_training_container:v1
                   machine_spec:
                     machine_type: n1-standard-4
                   replica_count: 1.0
@@ -1410,6 +1408,7 @@ root:
         isOptional: true
         parameterType: STRING
       bq_location:
+        defaultValue: US
         description: location of dataset in BigQuery
         isOptional: true
         parameterType: STRING
@@ -1423,11 +1422,8 @@ root:
         description: dataset id to store staging data & predictions in BigQuery
         isOptional: true
         parameterType: STRING
-      image_uri:
-        defaultValue: ''
-        isOptional: true
-        parameterType: STRING
       location:
+        defaultValue: us-central1
         description: location of the Google Cloud project
         isOptional: true
         parameterType: STRING
@@ -1437,12 +1433,8 @@ root:
         isOptional: true
         parameterType: STRING
       project:
+        defaultValue: mlops-learning-422012
         description: project id of the Google Cloud project
-        isOptional: true
-        parameterType: STRING
-      test_data_gcs_uri:
-        defaultValue: ''
-        description: Optional. GCS URI of static held-out test dataset.
         isOptional: true
         parameterType: STRING
       timestamp:

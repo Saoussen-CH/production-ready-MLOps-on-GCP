@@ -15,22 +15,22 @@ install: ## Set up local Python environment for development.
 
 compile: ## Compile pipeline. Set pipeline=<training|prediction>.
 	@echo "################################################################################" && \
-	echo "# Compile pipeline" && \
+	echo "# Compile $$pipeline pipeline" && \
 	echo "################################################################################" && \
 	cd pipelines/src && \
-	poetry run python -m pipelines.training.pipeline
+	poetry run python -m pipelines.${pipeline}
 
 build: ## Build and push container.
 	@echo "################################################################################" && \
 	echo "# Build training image" && \
 	echo "################################################################################" && \
 	cd model && \
-	docker build -t ${CONTAINER_IMAGE_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} .
-	docker push ${CONTAINER_IMAGE_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+	docker build -t ${CONTAINER_IMAGE_AR}/${IMAGE_NAME}:${IMAGE_TAG} .
+	docker push ${CONTAINER_IMAGE_AR}/${IMAGE_NAME}:${IMAGE_TAG}
 
 compile ?= true
 build ?= true
-run: ## Run a pipeline. Optionally set compile=<true|false> (default=true), build=<true|false>.
+run: ## Run a pipeline. Set pipeline=<training|prediction>. Optionally set compile=<true|false> (default=true), build=<true|false>.
 	@if [ $(compile) = "true" ]; then \
 		$(MAKE) compile ; \
 	elif [ $(compile) != "false" ]; then \
@@ -44,7 +44,13 @@ run: ## Run a pipeline. Optionally set compile=<true|false> (default=true), buil
 		exit ; \
 	fi && \
 	echo "################################################################################" && \
-	echo "# Run training pipeline" && \
+	echo "# Run $$pipeline pipeline" && \
 	echo "################################################################################" && \
 	cd pipelines/src && \
-	poetry run python -m pipelines.training.utils.trigger_pipeline --template_path=./taxifare-pipeline.yaml --display_name=taxifare-pipeline
+	poetry run python -m pipelines.utils.trigger_pipeline --template_path=./taxifare-${pipeline}-pipeline.yaml --display_name=taxifare-${pipeline}-pipeline --type=${pipeline}
+
+training: ## Run training pipeline. Supports same options as run.
+	@$(MAKE) run pipeline=training
+
+prediction:	## Run prediction pipeline. Supports same options as run.
+	@$(MAKE) run pipeline=prediction build=false

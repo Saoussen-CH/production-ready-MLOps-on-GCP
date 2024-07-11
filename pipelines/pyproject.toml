@@ -24,3 +24,15 @@ pre-commit = "^3.7.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.flake8]
+max-line-length = 88
+per-file-ignores = [
+    "E203",
+    "F841"
+]
+ignore = [
+    "E203",
+    "F841",
+
+]

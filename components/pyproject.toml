@@ -19,3 +19,16 @@ pytest = "^8.2.2"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.flake8]
+max-line-length = 88
+per-file-ignores = [
+    "E203",
+    "F841",
+    "E501",
+]
+ignore = [
+    "E203",
+    "F841",
+    "E501",
+]
