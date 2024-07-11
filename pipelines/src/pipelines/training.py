@@ -15,11 +15,10 @@ from google_cloud_pipeline_components.v1.custom_job import CustomTrainingJobOp
 
 from kfp import compiler, dsl
 
-from pipelines.training.utils.query import generate_query
-
+from pipelines.utils.query import generate_query
 
 # custom container
-ARTIFACT_REGISTERY = env.get("CONTAINER_IMAGE_REGISTRY")
+ARTIFACT_REGISTERY = env.get("CONTAINER_IMAGE_AR")
 IMAGE_NAME = env.get("IMAGE_NAME")
 IMAGE_TAG = env.get("IMAGE_TAG")
 
@@ -59,10 +58,8 @@ def pipeline(
     bq_source_uri: str = "bigquery-public-data.chicago_taxi_trips.taxi_trips",
     dataset: str = "taxi_trips_dataset",
     timestamp: str = "2022-12-01 00:00:00",
-    test_data_gcs_uri: str = "",
     base_output_dir: str = "",
     training_job_display_name: str = "",
-    image_uri: str = "",
     model_name: str = "taxi-traffic-model",
 ):
     """
@@ -228,5 +225,5 @@ def pipeline(
 
 if __name__ == "__main__":
     compiler.Compiler().compile(
-        pipeline_func=pipeline, package_path="taxifare-pipeline.yaml"
+        pipeline_func=pipeline, package_path="taxifare-training-pipeline.yaml"
     )

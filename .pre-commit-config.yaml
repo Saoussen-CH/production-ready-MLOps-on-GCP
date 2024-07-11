@@ -20,10 +20,6 @@ repos:
       # Run the formatter.
       - id: ruff-format
 
-  - repo: https://github.com/psf/black
-    rev: 24.4.2
-    hooks:
-      - id: black
 
   - repo: https://github.com/PyCQA/flake8
     rev: 7.0.0
@@ -34,3 +30,7 @@ repos:
     rev: 3.0.0
     hooks:
       - id: git-dirty
+  - repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+      - id: black
