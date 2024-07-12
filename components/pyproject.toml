@@ -8,6 +8,7 @@ authors = ["Example User <user@example.com>"]
 [tool.poetry.dependencies]
 python = "3.10.14"
 kfp = "^2.7.0"
+pytest-mock = "^3.14.0"
 
 
 [tool.poetry.group.dev.dependencies]
