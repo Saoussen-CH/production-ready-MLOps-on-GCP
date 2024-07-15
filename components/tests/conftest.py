@@ -1,5 +1,6 @@
 import pytest
 import kfp.dsl
+import json
 
 
 @pytest.fixture(autouse=True)
@@ -53,3 +54,34 @@ def mock_create_batch_prediction_job(mock_job_service_client):
 @pytest.fixture
 def mock_get_batch_prediction_job(mock_job_service_client):
     return mock_job_service_client.return_value.get_batch_prediction_job
+
+
+@pytest.fixture
+def mock_model(tmp_path):
+    return type(
+        "MockModel",
+        (object,),
+        {
+            "uri": str(tmp_path / "model-uri"),
+            "metadata": {"resourceName": "model-resource-name"},
+        },
+    )()
+
+
+@pytest.fixture
+def mock_dataset(tmp_path):
+    return type("MockDataset", (object,), {"uri": str(tmp_path / "test-data-uri")})()
+
+
+@pytest.fixture
+def mock_metrics(tmp_path):
+    metrics_path = tmp_path / "metrics.json"
+    metrics = {"problemType": "classification", "accuracy": 0.9}
+    with open(metrics_path, "w") as f:
+        json.dump(metrics, f)
+    return type("MockMetrics", (object,), {"path": str(metrics_path)})()
+
+
+@pytest.fixture
+def mock_model_service_client(mocker):
+    return mocker.patch("google.cloud.aiplatform_v1.ModelServiceClient")
