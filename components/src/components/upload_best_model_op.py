@@ -182,6 +182,7 @@ def upload_best_model_op(
         parent_model_uri = champion_model.resource_name
 
     model = upload_model_to_registry(challenger_wins, parent_model_uri)
+
     import_evaluation(
         parsed_metrics=challenger_metrics,
         challenger_model=model,
