@@ -57,6 +57,11 @@ def mock_get_batch_prediction_job(mock_job_service_client):
 
 
 @pytest.fixture
+def mock_model_class(mocker):
+    return mocker.patch("google.cloud.aiplatform.Model")
+
+
+@pytest.fixture
 def mock_model(tmp_path):
     return type(
         "MockModel",
