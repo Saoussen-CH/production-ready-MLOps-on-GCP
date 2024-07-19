@@ -54,3 +54,15 @@ training: ## Run training pipeline. Supports same options as run.
 
 prediction:	## Run prediction pipeline. Supports same options as run.
 	@$(MAKE) run pipeline=prediction build=false
+
+packages ?= pipelines components
+test: ## Run unit tests. Optionally set packages=<pipelines and/or components> (default="pipelines components").
+	@echo "################################################################################" && \
+	echo "# Test $$packages package(s)" && \
+	echo "################################################################################" && \
+	for package in $$packages ; do \
+		echo "Testing $$package package" && \
+		cd $$package && \
+		poetry run pytest && \
+		cd .. ; \
+	done
