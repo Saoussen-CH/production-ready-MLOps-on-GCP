@@ -19,7 +19,6 @@ steps:
     env:
       - SKIP=git-dirty
       - CONTAINER_IMAGE_AR=dummy_value
-
 options:
   logging: CLOUD_LOGGING_ONLY
 
