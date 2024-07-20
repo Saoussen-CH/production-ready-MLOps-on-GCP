@@ -1,0 +1,28 @@
+steps:
+
+  # Install poetry and dependenciess, run pre-commit and unit tests
+  # Then compile pipelines (to make sure they can compile)
+  # need to run "git init" for pre-commit checks to work
+  - name: python:3.10.14
+    entrypoint: /bin/sh
+    args:
+      - -c
+      - |
+        curl -sSL https://install.python-poetry.org | python3 - && \
+        export PATH="/builder/home/.local/bin:$$PATH" && \
+        make install && \
+        git init && \
+        git add . && \
+        make compile pipeline=training && \
+        make compile pipeline=prediction && \
+        make test
+    env:
+      - SKIP=git-dirty
+      - CONTAINER_IMAGE_REGISTRY=dummy_value
+      - RESOURCE_SUFFIX=default
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+# Increase timeout to allow poetry to resolve dependencies
+timeout: 3600s
