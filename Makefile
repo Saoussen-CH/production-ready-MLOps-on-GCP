@@ -66,3 +66,7 @@ test: ## Run unit tests. Optionally set packages=<pipelines and/or components> (
 		poetry run pytest && \
 		cd .. ; \
 	done
+
+e2e-tests: ##Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>.
+	cd pipelines && \
+	poetry run pytest tests/test_e2e.py --pipeline_type=${pipeline}

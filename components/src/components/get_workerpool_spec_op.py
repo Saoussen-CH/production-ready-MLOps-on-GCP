@@ -1,4 +1,5 @@
-from kfp.dsl import  component
+from kfp.dsl import component
+
 
 @component(base_image="python:3.10.14")
 def get_workerpool_spec_op(
@@ -6,7 +7,6 @@ def get_workerpool_spec_op(
     args: dict = {},
     env: dict = {},
 ) -> list:
-
     for spec in worker_pool_specs:
         if "args" not in spec["container_spec"]:
             spec["container_spec"]["args"] = []

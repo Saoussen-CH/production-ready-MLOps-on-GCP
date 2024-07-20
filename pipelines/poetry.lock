@@ -38,6 +38,52 @@ six = ">=1.6.1,<2.0"
 wheel = ">=0.23.0,<1.0"
 
 [[package]]
+name = "black"
+version = "24.4.2"
+description = "The uncompromising code formatter."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "black-24.4.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:dd1b5a14e417189db4c7b64a6540f31730713d173f0b63e55fabd52d61d8fdce"},
+    {file = "black-24.4.2-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:8e537d281831ad0e71007dcdcbe50a71470b978c453fa41ce77186bbe0ed6021"},
+    {file = "black-24.4.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:eaea3008c281f1038edb473c1aa8ed8143a5535ff18f978a318f10302b254063"},
+    {file = "black-24.4.2-cp310-cp310-win_amd64.whl", hash = "sha256:7768a0dbf16a39aa5e9a3ded568bb545c8c2727396d063bbaf847df05b08cd96"},
+    {file = "black-24.4.2-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:257d724c2c9b1660f353b36c802ccece186a30accc7742c176d29c146df6e474"},
+    {file = "black-24.4.2-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:bdde6f877a18f24844e381d45e9947a49e97933573ac9d4345399be37621e26c"},
+    {file = "black-24.4.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e151054aa00bad1f4e1f04919542885f89f5f7d086b8a59e5000e6c616896ffb"},
+    {file = "black-24.4.2-cp311-cp311-win_amd64.whl", hash = "sha256:7e122b1c4fb252fd85df3ca93578732b4749d9be076593076ef4d07a0233c3e1"},
+    {file = "black-24.4.2-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:accf49e151c8ed2c0cdc528691838afd217c50412534e876a19270fea1e28e2d"},
+    {file = "black-24.4.2-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:88c57dc656038f1ab9f92b3eb5335ee9b021412feaa46330d5eba4e51fe49b04"},
+    {file = "black-24.4.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:be8bef99eb46d5021bf053114442914baeb3649a89dc5f3a555c88737e5e98fc"},
+    {file = "black-24.4.2-cp312-cp312-win_amd64.whl", hash = "sha256:415e686e87dbbe6f4cd5ef0fbf764af7b89f9057b97c908742b6008cc554b9c0"},
+    {file = "black-24.4.2-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:bf10f7310db693bb62692609b397e8d67257c55f949abde4c67f9cc574492cc7"},
+    {file = "black-24.4.2-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:98e123f1d5cfd42f886624d84464f7756f60ff6eab89ae845210631714f6db94"},
+    {file = "black-24.4.2-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:48a85f2cb5e6799a9ef05347b476cce6c182d6c71ee36925a6c194d074336ef8"},
+    {file = "black-24.4.2-cp38-cp38-win_amd64.whl", hash = "sha256:b1530ae42e9d6d5b670a34db49a94115a64596bc77710b1d05e9801e62ca0a7c"},
+    {file = "black-24.4.2-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:37aae07b029fa0174d39daf02748b379399b909652a806e5708199bd93899da1"},
+    {file = "black-24.4.2-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:da33a1a5e49c4122ccdfd56cd021ff1ebc4a1ec4e2d01594fef9b6f267a9e741"},
+    {file = "black-24.4.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ef703f83fc32e131e9bcc0a5094cfe85599e7109f896fe8bc96cc402f3eb4b6e"},
+    {file = "black-24.4.2-cp39-cp39-win_amd64.whl", hash = "sha256:b9176b9832e84308818a99a561e90aa479e73c523b3f77afd07913380ae2eab7"},
+    {file = "black-24.4.2-py3-none-any.whl", hash = "sha256:d36ed1124bb81b32f8614555b34cc4259c3fbc7eec17870e8ff8ded335b58d8c"},
+    {file = "black-24.4.2.tar.gz", hash = "sha256:c872b53057f000085da66a19c55d68f6f8ddcac2642392ad3a355878406fbd4d"},
+]
+
+[package.dependencies]
+click = ">=8.0.0"
+mypy-extensions = ">=0.4.3"
+packaging = ">=22.0"
+pathspec = ">=0.9.0"
+platformdirs = ">=2"
+tomli = {version = ">=1.1.0", markers = "python_version < \"3.11\""}
+typing-extensions = {version = ">=4.0.1", markers = "python_version < \"3.11\""}
+
+[package.extras]
+colorama = ["colorama (>=0.4.3)"]
+d = ["aiohttp (>=3.7.4)", "aiohttp (>=3.7.4,!=3.9.0)"]
+jupyter = ["ipython (>=7.8.0)", "tokenize-rt (>=3.2.0)"]
+uvloop = ["uvloop (>=0.15.2)"]
+
+[[package]]
 name = "cachetools"
 version = "5.3.3"
 description = "Extensible memoizing collections and decorators"
@@ -1070,6 +1116,17 @@ numpy = {version = ">=1.21.2", markers = "python_version >= \"3.10\""}
 dev = ["absl-py", "pyink", "pylint (>=2.6.0)", "pytest", "pytest-xdist"]
 
 [[package]]
+name = "mypy-extensions"
+version = "1.0.0"
+description = "Type system extensions for programs checked with the mypy type checker."
+optional = false
+python-versions = ">=3.5"
+files = [
+    {file = "mypy_extensions-1.0.0-py3-none-any.whl", hash = "sha256:4392f6c0eb8a5668a69e23d168ffa70f0be9ccfd32b5cc2d26a34ae5b844552d"},
+    {file = "mypy_extensions-1.0.0.tar.gz", hash = "sha256:75dbf8955dc00442a438fc4d0666508a9a97b6bd41aa2f0ffe9d2f2725af0782"},
+]
+
+[[package]]
 name = "namex"
 version = "0.0.8"
 description = "A simple utility to separate the implementation of your Python package and its public API surface."
@@ -1239,6 +1296,17 @@ python-versions = ">=3.8"
 files = [
     {file = "packaging-24.1-py3-none-any.whl", hash = "sha256:5b8f2217dbdbd2f7f384c41c628544e6d52f2d0f53c6d0c3ea61aa5d1d7ff124"},
     {file = "packaging-24.1.tar.gz", hash = "sha256:026ed72c8ed3fcce5bf8950572258698927fd1dbda10a5e981cdf0ac37f4f002"},
+]
+
+[[package]]
+name = "pathspec"
+version = "0.12.1"
+description = "Utility library for gitignore style pattern matching of file paths."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pathspec-0.12.1-py3-none-any.whl", hash = "sha256:a0d503e138a4c123b27490a4f7beda6a01c6f288df0e4a8b79c7eb0dc7b4cc08"},
+    {file = "pathspec-0.12.1.tar.gz", hash = "sha256:a482d51503a1ab33b1c67a6c3813a26953dbdc71c31dacaef9a838c4e29f5712"},
 ]
 
 [[package]]
@@ -1675,6 +1743,33 @@ files = [
 pyasn1 = ">=0.1.3"
 
 [[package]]
+name = "ruff"
+version = "0.5.3"
+description = "An extremely fast Python linter and code formatter, written in Rust."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "ruff-0.5.3-py3-none-linux_armv6l.whl", hash = "sha256:b12424d9db7347fa63c5ed9af010003338c63c629fb9c9c6adb2aa4f5699729b"},
+    {file = "ruff-0.5.3-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:b8d72c5684bbd4ed304a9a955ee2e67f57b35f6193222ade910cca8a805490e3"},
+    {file = "ruff-0.5.3-py3-none-macosx_11_0_arm64.whl", hash = "sha256:d2fc2cdb85ccac1e816cc9d5d8cedefd93661bd957756d902543af32a6b04a71"},
+    {file = "ruff-0.5.3-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:cf4bc751240b2fab5d19254571bcacb315c7b0b00bf3c912d52226a82bbec073"},
+    {file = "ruff-0.5.3-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:bc697ec874fdd7c7ba0a85ec76ab38f8595224868d67f097c5ffc21136e72fcd"},
+    {file = "ruff-0.5.3-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:e791d34d3557a3819b3704bc1f087293c821083fa206812842fa363f6018a192"},
+    {file = "ruff-0.5.3-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl", hash = "sha256:76bb5a87fd397520b91a83eae8a2f7985236d42dd9459f09eef58e7f5c1d8316"},
+    {file = "ruff-0.5.3-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:a8cfc7a26422c78e94f1ec78ec02501bbad2df5834907e75afe474cc6b83a8c1"},
+    {file = "ruff-0.5.3-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:96066c4328a49fce2dd40e80f7117987369feec30ab771516cf95f1cc2db923c"},
+    {file = "ruff-0.5.3-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:03bfe9ab5bdc0b08470c3b261643ad54ea86edc32b64d1e080892d7953add3ad"},
+    {file = "ruff-0.5.3-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:7704582a026fa02cca83efd76671a98ee6eb412c4230209efe5e2a006c06db62"},
+    {file = "ruff-0.5.3-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:08058d077e21b856d32ebf483443390e29dc44d927608dc8f092ff6776519da9"},
+    {file = "ruff-0.5.3-py3-none-musllinux_1_2_i686.whl", hash = "sha256:77d49484429ed7c7e6e2e75a753f153b7b58f875bdb4158ad85af166a1ec1822"},
+    {file = "ruff-0.5.3-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:642cbff6cbfa38d2566d8db086508d6f472edb136cbfcc4ea65997745368c29e"},
+    {file = "ruff-0.5.3-py3-none-win32.whl", hash = "sha256:eafc45dd8bdc37a00b28e68cc038daf3ca8c233d73fea276dcd09defb1352841"},
+    {file = "ruff-0.5.3-py3-none-win_amd64.whl", hash = "sha256:cbaec2ddf4f78e5e9ecf5456ea0f496991358a1d883862ed0b9e947e2b6aea93"},
+    {file = "ruff-0.5.3-py3-none-win_arm64.whl", hash = "sha256:05fbd2cb404775d6cd7f2ff49504e2d20e13ef95fa203bd1ab22413af70d420b"},
+    {file = "ruff-0.5.3.tar.gz", hash = "sha256:2a3eb4f1841771fa5b67a56be9c2d16fd3cc88e378bd86aaeaec2f7e6bcdd0a2"},
+]
+
+[[package]]
 name = "setuptools"
 version = "70.0.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
@@ -2093,4 +2188,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "3.10.14"
-content-hash = "edba5947076ea095b33c3514d496e809bcc19789d48d97d407cfeda8649f9bc3"
+content-hash = "34b132f1d53f51ce6455457dfd9bba553ea7557925e30e3dae64b6f7bfac8a49"

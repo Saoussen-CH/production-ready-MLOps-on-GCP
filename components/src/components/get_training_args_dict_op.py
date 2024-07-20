@@ -1,5 +1,6 @@
 from kfp.dsl import Input, component, Dataset
 
+
 @component(base_image="python:3.10.14")
 def get_training_args_dict_op(
     train_data: Input[Dataset],
