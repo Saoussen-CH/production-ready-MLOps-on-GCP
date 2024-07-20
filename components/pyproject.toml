@@ -16,6 +16,8 @@ google-cloud-bigquery = "^3.24.0"
 google-cloud-aiplatform = "^1.55.0"
 google-cloud-pipeline-components = "^2.14.1"
 pytest = "^8.2.2"
+black = "^24.4.2"
+ruff = "^0.5.3"
 
 [build-system]
 requires = ["poetry-core"]
