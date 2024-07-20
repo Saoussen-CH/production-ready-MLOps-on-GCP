@@ -18,8 +18,7 @@ steps:
         make test
     env:
       - SKIP=git-dirty
-      - CONTAINER_IMAGE_REGISTRY=dummy_value
-      - RESOURCE_SUFFIX=default
+      - CONTAINER_IMAGE_AR=dummy_value
 
 options:
   logging: CLOUD_LOGGING_ONLY
