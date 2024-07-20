@@ -15,7 +15,8 @@ steps:
         git add . && \
         make compile pipeline=training && \
         make compile pipeline=prediction && \
-        make test
+        make test-components
+        make test-pipelines
     env:
       - SKIP=git-dirty
       - CONTAINER_IMAGE_AR=dummy_value
