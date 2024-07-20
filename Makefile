@@ -70,7 +70,7 @@ test-pipelines: ## Run unit tests for pipelines package
 	echo "Testing pipelines package" && \
 	cd pipelines/tests && \
 	poetry run pytest utils/test_trigger_pipelines.py &&\
-	poetry run pytest utils/test_upload_pipelines.py
+	poetry run pytest utils/test_upload_pipeline.py
 
 
 e2e-tests: ##Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>.
