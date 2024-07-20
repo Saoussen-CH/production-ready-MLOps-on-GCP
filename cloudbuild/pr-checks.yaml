@@ -23,4 +23,4 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 # Increase timeout to allow poetry to resolve dependencies
-timeout: 3600s
+timeout: 5400s
