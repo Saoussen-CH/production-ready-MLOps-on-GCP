@@ -37,6 +37,4 @@ def convert_payload(payload: dict) -> dict:
     # if payload["data"] is missing, add it as empty dict
     payload["data"] = payload.get("data", {})
 
-    print("data")
-    print(payload["data"])
     return payload

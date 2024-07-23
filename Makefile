@@ -25,8 +25,8 @@ build: ## Build and push container.
 	echo "# Build training image" && \
 	echo "################################################################################" && \
 	cd model && \
-	docker build -t ${CONTAINER_IMAGE_AR}/${IMAGE_NAME}:${IMAGE_TAG} .
-	docker push ${CONTAINER_IMAGE_AR}/${IMAGE_NAME}:${IMAGE_TAG}
+	docker build -t ${VERTEX_LOCATION}-docker.pkg.dev/${VERTEX_PROJECT_ID}/mlops-docker-repo/${IMAGE_NAME}:${IMAGE_TAG} .
+	docker push ${VERTEX_LOCATION}-docker.pkg.dev/${VERTEX_PROJECT_ID}/mlops-docker-repo/${IMAGE_NAME}:${IMAGE_TAG}
 
 compile ?= true
 build ?= true

@@ -1,0 +1,55 @@
+steps:
+- id: build-training-image
+  name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', '${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-docker-repo/${_IMAGE_NAME}:${COMMIT_SHA}', '.']
+  dir: 'model'
+  env:
+    - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
+    - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
+    - BQ_LOCATION=${_TEST_BQ_LOCATION}
+    - VERTEX_PIPELINE_ROOT=${_TEST_VERTEX_PIPELINE_ROOT}
+    - IMAGE_NAME=${_IMAGE_NAME}
+    - IMAGE_TAG=${COMMIT_SHA}
+  waitFor: ['-']
+- id: push-training-image
+  name: 'gcr.io/cloud-builders/docker'
+  args: ['push', '${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-docker-repo/${_IMAGE_NAME}:${COMMIT_SHA}']
+  dir: 'model'
+  env:
+    - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
+    - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
+    - BQ_LOCATION=${_TEST_BQ_LOCATION}
+    - VERTEX_PIPELINE_ROOT=${_TEST_VERTEX_PIPELINE_ROOT}
+    - IMAGE_NAME=${_IMAGE_NAME}
+    - IMAGE_TAG=${COMMIT_SHA}
+  waitFor:
+    - build-training-image
+
+# Install Python deps
+# Run end-to-end (E2E) pipeline tests on both pipelines
+- id: e2e-tests
+  name: python:3.10.14
+  entrypoint: /bin/sh
+  args:
+    - -c
+    - |
+      curl -sSL https://install.python-poetry.org | python3 - &&
+      export PATH="/builder/home/.local/bin:$$PATH" &&
+      make install &&
+      make e2e-tests pipeline=training && \
+      make e2e-tests pipeline=prediction
+  env:
+    - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
+    - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
+    - BQ_LOCATION=${_TEST_BQ_LOCATION}
+    - VERTEX_PIPELINE_ROOT=${_TEST_VERTEX_PIPELINE_ROOT}
+    - IMAGE_NAME=${_IMAGE_NAME}
+    - IMAGE_TAG=${COMMIT_SHA}
+  waitFor:
+    - push-training-image
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+# Increase timeout to allow end-to-end (E2E) pipeline tests to run
+timeout: 18000s  # 5 hours
