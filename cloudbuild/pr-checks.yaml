@@ -15,14 +15,12 @@ steps:
         git add . && \
         make compile pipeline=training && \
         make compile pipeline=prediction && \
-        make test
+        make test-components
+        make test-pipelines
     env:
       - SKIP=git-dirty
-      - CONTAINER_IMAGE_REGISTRY=dummy_value
-      - RESOURCE_SUFFIX=default
-
 options:
   logging: CLOUD_LOGGING_ONLY
 
 # Increase timeout to allow poetry to resolve dependencies
-timeout: 3600s
+timeout: 5400s

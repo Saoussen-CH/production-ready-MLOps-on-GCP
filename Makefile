@@ -25,8 +25,8 @@ build: ## Build and push container.
 	echo "# Build training image" && \
 	echo "################################################################################" && \
 	cd model && \
-	docker build -t ${CONTAINER_IMAGE_AR}/${IMAGE_NAME}:${IMAGE_TAG} .
-	docker push ${CONTAINER_IMAGE_AR}/${IMAGE_NAME}:${IMAGE_TAG}
+	docker build -t ${VERTEX_LOCATION}-docker.pkg.dev/${VERTEX_PROJECT_ID}/mlops-docker-repo/${IMAGE_NAME}:${IMAGE_TAG} .
+	docker push ${VERTEX_LOCATION}-docker.pkg.dev/${VERTEX_PROJECT_ID}/mlops-docker-repo/${IMAGE_NAME}:${IMAGE_TAG}
 
 compile ?= true
 build ?= true
@@ -55,17 +55,23 @@ training: ## Run training pipeline. Supports same options as run.
 prediction:	## Run prediction pipeline. Supports same options as run.
 	@$(MAKE) run pipeline=prediction build=false
 
-packages ?= pipelines components
-test: ## Run unit tests. Optionally set packages=<pipelines and/or components> (default="pipelines components").
+test-components: ## Run unit tests for components package
 	@echo "################################################################################" && \
-	echo "# Test $$packages package(s)" && \
+	echo "# Test components package" && \
 	echo "################################################################################" && \
-	for package in $$packages ; do \
-		echo "Testing $$package package" && \
-		cd $$package && \
-		poetry run pytest && \
-		cd .. ; \
-	done
+	echo "Testing components package" && \
+	cd components && \
+	poetry run pytest
+
+test-pipelines: ## Run unit tests for pipelines package
+	@echo "################################################################################" && \
+	echo "# Test pipelines package" && \
+	echo "################################################################################" && \
+	echo "Testing pipelines package" && \
+	cd pipelines/tests && \
+	poetry run pytest utils/test_trigger_pipelines.py &&\
+	poetry run pytest utils/test_upload_pipeline.py
+
 
 e2e-tests: ##Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>.
 	cd pipelines && \

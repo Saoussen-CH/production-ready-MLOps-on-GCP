@@ -5,7 +5,7 @@ from os import environ as env
 def test_upload_pipeline(mocker):
     # Set up test inputs
     yaml = "path/to/template.yaml"
-    dest = "https://europe-west1-kfp.pkg.dev/dummy-project/dummy-repo"
+    dest = "https://us-cental1-kfp.pkg.dev/dummy-project/dummy-repo"
     input_tags = ["dummy_tag1", "dummy_tag2"]
 
     # Mock environment variables

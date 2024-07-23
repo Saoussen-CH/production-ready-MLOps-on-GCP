@@ -18,11 +18,12 @@ from kfp import compiler, dsl
 from pipelines.utils.query import generate_query
 
 # custom container
-ARTIFACT_REGISTERY = env.get("CONTAINER_IMAGE_AR")
+VERTEX_PROJECT_ID = env.get("VERTEX_PROJECT_ID")
+VERTEX_LOCATION = env.get("VERTEX_LOCATION")
 IMAGE_NAME = env.get("IMAGE_NAME")
 IMAGE_TAG = env.get("IMAGE_TAG")
 
-TRAINING_IMAGE = f"{ARTIFACT_REGISTERY}/{IMAGE_NAME}:{IMAGE_TAG}"
+TRAINING_IMAGE = f"{VERTEX_LOCATION}-docker.pkg.dev/{VERTEX_PROJECT_ID}/mlops-docker-repo/{IMAGE_NAME}:{IMAGE_TAG}"  # noqa
 
 
 bq_source_uri = "bigquery-public-data.chicago_taxi_trips.taxi_trips"

@@ -20,7 +20,7 @@ def trigger_pipeline(
 
     project = env.get("VERTEX_PROJECT_ID")
     location = env.get("VERTEX_LOCATION")
-    bucket_uri = env.get("BUCKET_URI")
+    bucket_uri = env.get("VERTEX_PIPELINE_ROOT")
 
     if type == "training":
         parameters = {

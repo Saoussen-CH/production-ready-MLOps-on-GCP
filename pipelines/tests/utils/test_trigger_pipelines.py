@@ -17,7 +17,7 @@ def test_trigger_pipeline(mocker):
     # Set up environment variables
     os.environ["VERTEX_PROJECT_ID"] = "test-project"
     os.environ["VERTEX_LOCATION"] = "us-central1"
-    os.environ["BUCKET_URI"] = "gs://test-bucket"
+    os.environ["VERTEX_PIPELINE_ROOT"] = "gs://test-bucket"
 
     # Call the function with test arguments
     template_path = "gs://test-bucket/pipeline.yaml"
