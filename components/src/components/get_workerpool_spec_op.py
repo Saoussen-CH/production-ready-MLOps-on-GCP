@@ -5,6 +5,7 @@ from kfp.dsl import component
 def get_workerpool_spec_op(
     worker_pool_specs: list,
     args: dict = {},
+    hyperparams: dict = {},
     env: dict = {},
 ) -> list:
     for spec in worker_pool_specs:
@@ -12,6 +13,9 @@ def get_workerpool_spec_op(
             spec["container_spec"]["args"] = []
         for k, v in args.items():
             spec["container_spec"]["args"].append(f"--{k.replace('_', '-')}={v}")
+        for k, v in hyperparams.items():
+            spec["container_spec"]["args"].append(f"--{k.replace('_', '-')}={v}")
+
         if env:
             if "env" not in spec["container_spec"]:
                 spec["container_spec"]["env"] = []

@@ -13,6 +13,22 @@ from tensorflow.keras.layers import Dense, Normalization, StringLookup, Concaten
 from tensorflow.keras import callbacks
 
 # numeric/categorical features in Chicago trips dataset to be preprocessed
+import hypertune
+
+
+class HyperTuneCallback(tf.keras.callbacks.Callback):
+    def __init__(self, metric=None) -> None:
+        super().__init__()
+        self.metric = metric
+        self.hpt = hypertune.HyperTune()
+
+    def on_epoch_end(self, epoch, logs=None):
+        if logs and self.metric in logs:
+            self.hpt.report_hyperparameter_tuning_metric(
+                hyperparameter_metric_tag=self.metric,
+                metric_value=logs[self.metric],
+                global_step=epoch,
+            )
 
 
 DEFAULT_HPARAMS = dict(
@@ -22,10 +38,14 @@ DEFAULT_HPARAMS = dict(
     optimizer="Adam",
     learning_rate=0.001,
     metrics=[
-        "RootMeanSquaredError",
-        "MeanAbsoluteError",
-        "MeanAbsolutePercentageError",
-        "MeanSquaredLogarithmicError",
+        tf.keras.metrics.RootMeanSquaredError(name="root_mean_squared_error"),
+        tf.keras.metrics.MeanAbsoluteError(name="mean_absolute_error"),
+        tf.keras.metrics.MeanAbsolutePercentageError(
+            name="mean_absolute_percentage_error"
+        ),
+        tf.keras.metrics.MeanSquaredLogarithmicError(
+            name="mean_squared_logarithmic_error"
+        ),
     ],
     hidden_units=[(10, "relu")],
     early_stopping_epochs=5,
@@ -123,7 +143,8 @@ def train_and_evaluate(params):
         if params["metrics"] == "":
             gcs_path = params["model"][len("gs://") :]
             logging.info(f"gcs_path: {gcs_path}")
-            gcs_path = gcs_path.split("/")[0]
+            length = len(gcs_path)
+            gcs_path = gcs_path[: length - 6]
             logging.info(f"gcs_path.split('/'): {gcs_path}")
             metrics_directory = os.path.join(gcs_path, "metrics")
             logging.info(f"metrics_directory: {metrics_directory}")
@@ -135,8 +156,16 @@ def train_and_evaluate(params):
     if params["checkpoints"].startswith("gs://"):
         params["checkpoints"] = Path("/gcs/" + params["checkpoints"][5:])
 
-    # merge dictionaries by overwriting default_model_params if provided in model_params
-    hparams = {**DEFAULT_HPARAMS, **params["hparams"]}
+    # Initialize hyperparameters with default values
+    hparams = {**DEFAULT_HPARAMS, **params.get("hparams", {})}
+
+    # Update hparams with command line arguments
+    if params.get("batch_size"):
+        hparams["batch_size"] = params["batch_size"]
+
+    if params.get("learning_rate"):
+        hparams["learning_rate"] = params["learning_rate"]
+
     logging.info(f"Using model hyper-parameters: {hparams}")
 
     label = hparams["label"]
@@ -151,17 +180,24 @@ def train_and_evaluate(params):
     logging.info(f"Validation feature names: {valid_features}")
 
     model = build_and_compile_model(train_ds, hparams)
-    # logging.info(model.summary())
 
     # steps_per_epoch = len(train_ds) // (hparams["batch_size"] * hparams["epochs"])
+    # Define the callbacks
+    hypertune_cb = None
+    if params.get("hypertune"):
+        hypertune_cb = HyperTuneCallback(metric="val_root_mean_squared_error")
 
     checkpoint_cb = callbacks.ModelCheckpoint(
         params["checkpoints"], save_weights_only=True, verbose=1
     )
     logging.info("Use early stopping")
     earlystopping_cb = tf.keras.callbacks.EarlyStopping(
-        monitor="loss", mode="min", patience=hparams["early_stopping_epochs"]
+        monitor="val_loss", mode="min", patience=hparams["early_stopping_epochs"]
     )
+
+    callback_list = [checkpoint_cb, earlystopping_cb]
+    if hypertune_cb:
+        callback_list.append(hypertune_cb)
 
     history = model.fit(
         train_ds,
@@ -170,7 +206,7 @@ def train_and_evaluate(params):
         epochs=hparams["epochs"],
         # steps_per_epoch=max(1, steps_per_epoch),
         verbose=2,  # 0=silent, 1=progress bar, 2=one line per epoch
-        callbacks=[checkpoint_cb, earlystopping_cb],
+        callbacks=callback_list,
     )
 
     logging.info(f"Save model to: {params['model']}")
