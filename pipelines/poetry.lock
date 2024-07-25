@@ -230,6 +230,16 @@ files = [
 colorama = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
+name = "cloudml-hypertune"
+version = "0.1.0.dev6"
+description = "A library to report Google CloudML Engine HyperTune metrics."
+optional = false
+python-versions = "*"
+files = [
+    {file = "cloudml-hypertune-0.1.0.dev6.tar.gz", hash = "sha256:b96a5a203ecf7b3302e94f63977d7293fe21c696bea27e35667de82599696a89"},
+]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 description = "Cross-platform colored terminal text."
@@ -2188,4 +2198,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "3.10.14"
-content-hash = "34b132f1d53f51ce6455457dfd9bba553ea7557925e30e3dae64b6f7bfac8a49"
+content-hash = "deeeeb478d3e6310c8c428216fba581f6f38c2564d7230d3991e4303c4190a64"

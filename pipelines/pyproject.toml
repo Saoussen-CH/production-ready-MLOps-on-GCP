@@ -17,6 +17,7 @@ tensorflow = "^2.16.1"
 google-cloud-pipeline-components = "^2.14.1"
 components = { path = "../components", develop = true }
 pytest-mock = "^3.14.0"
+cloudml-hypertune = "^0.1.0.dev6"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.2"

@@ -29,6 +29,12 @@ if __name__ == "__main__":
 
     parser.add_argument("--hparams", default={}, type=json.loads)
 
+    parser.add_argument("--hypertune", type=bool, default=False)
+
+    # tunable parameters
+    parser.add_argument("--batch-size", type=int, default=64)
+    parser.add_argument("--learning-rate", type=float, default=0.001)
+
     args = parser.parse_args()
     params = args.__dict__
 

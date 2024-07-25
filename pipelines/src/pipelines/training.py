@@ -6,12 +6,18 @@ from components import (
     get_training_args_dict_op,
     get_workerpool_spec_op,
     upload_best_model_op,
+    get_hyperparameter_tuning_results_op,
 )
 
 from os import environ as env
 
 from google_cloud_pipeline_components.v1.bigquery import BigqueryQueryJobOp
 from google_cloud_pipeline_components.v1.custom_job import CustomTrainingJobOp
+from google_cloud_pipeline_components.v1.hyperparameter_tuning_job import (
+    HyperparameterTuningJobRunOp,
+)
+from google_cloud_pipeline_components.v1 import hyperparameter_tuning_job
+from google.cloud.aiplatform import hyperparameter_tuning as hpt
 
 from kfp import compiler, dsl
 
@@ -46,6 +52,19 @@ WORKER_POOL_SPECS = [
         ),
     )
 ]
+
+# define the metric spec for hyperparameter tuning
+# for details:
+# https://cloud.google.com/vertex-ai/docs/reference/rest/v1/StudySpec#MetricSpec
+METRIC_SPEC = dict(val_root_mean_squared_error="minimize")
+
+# define the parameter specs for tuning
+# for details:
+# https://cloud.google.com/vertex-ai/docs/reference/rest/v1/StudySpec#ParameterSpec
+PARAMETER_SPEC = {
+    "learning-rate": hpt.DoubleParameterSpec(min=0.0001, max=1, scale="log"),
+    "batch-size": hpt.DiscreteParameterSpec(values=[128, 256, 512], scale="linear"),
+}
 
 
 PREDICTION_IMAGE = "us-docker.pkg.dev/vertex-ai/prediction/tf2-cpu.2-11:latest"
@@ -182,7 +201,51 @@ def pipeline(
         train_data=train_dataset.outputs["dataset"],
         valid_data=valid_dataset.outputs["dataset"],
         test_data=test_dataset.outputs["dataset"],
+        hypertune=True,
     )
+
+    hypertune_args_step = get_training_args_dict_op(**args).set_display_name(
+        "Get-Hypertune-Args"
+    )
+
+    # create the workerpool spec for hyperparameter tuning
+    # dont provide hyperparams, because they are defined in the PARAMETER_SPEC
+    # and directly passed to the hyperparameter tuning job
+    hypertune_worker_pool_specs_step = get_workerpool_spec_op(
+        worker_pool_specs=WORKER_POOL_SPECS,
+        args=hypertune_args_step.output,
+    ).set_display_name("Get-Hypertune-Worker-Pool-Spec")
+
+    # create the actual hyperparameter tuning job
+    # here you can choose how many trials to do and how many to run in parallel
+    hypertune_step = HyperparameterTuningJobRunOp(
+        display_name="hypertune-job",
+        project=project,
+        location=location,
+        worker_pool_specs=hypertune_worker_pool_specs_step.output,
+        study_spec_metrics=hyperparameter_tuning_job.utils.serialize_metrics(
+            METRIC_SPEC
+        ),
+        study_spec_parameters=hyperparameter_tuning_job.utils.serialize_parameters(
+            PARAMETER_SPEC
+        ),
+        max_trial_count=6,
+        parallel_trial_count=2,
+        base_output_directory=f"{base_output_dir}/hypertune-job",
+    ).set_display_name("Hypertune-Job")
+
+    # now we can extract the results of the hyperparameter tuning job
+    hypertune_results_step = get_hyperparameter_tuning_results_op(
+        project=project,
+        location=location,
+        job_resource=hypertune_step.output,
+        study_spec_metrics=hyperparameter_tuning_job.utils.serialize_metrics(
+            METRIC_SPEC
+        ),
+    ).set_display_name("Get-Hypertune-Results")
+
+    # update our args dict for training
+    args.update(dict(hypertune=False))
 
     # create the args dict
     training_args_step = get_training_args_dict_op(**args).set_display_name(
@@ -192,6 +255,7 @@ def pipeline(
     # create the workerpool spec for training
     training_worker_pool_specs_step = get_workerpool_spec_op(
         worker_pool_specs=WORKER_POOL_SPECS,
+        hyperparams=hypertune_results_step.output,
         args=training_args_step.output,
     ).set_display_name("Get-Training-Worker-Pool-Spec")
 
@@ -200,7 +264,7 @@ def pipeline(
         project=project,
         display_name=training_job_display_name,
         worker_pool_specs=training_worker_pool_specs_step.output,
-        base_output_directory=base_output_dir,
+        base_output_directory=f"{base_output_dir}/training-job",
         location=location,
     )
 
