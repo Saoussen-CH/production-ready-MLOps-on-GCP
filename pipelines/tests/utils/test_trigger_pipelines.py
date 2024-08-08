@@ -1,8 +1,10 @@
 import os
+import pytest
 from pipelines.utils.trigger_pipeline import trigger_pipeline
 
 
-def test_trigger_pipeline(mocker):
+@pytest.mark.parametrize("enable_caching", [True, False])
+def test_trigger_pipeline(mocker, enable_caching):
     # Set up mock objects
     mock_pipeline_job = mocker.patch(
         "google.cloud.aiplatform.pipeline_jobs.PipelineJob"
@@ -18,12 +20,15 @@ def test_trigger_pipeline(mocker):
     os.environ["VERTEX_PROJECT_ID"] = "test-project"
     os.environ["VERTEX_LOCATION"] = "us-central1"
     os.environ["VERTEX_PIPELINE_ROOT"] = "gs://test-bucket"
+    os.environ["VERTEX_SA_EMAIL"] = "test-service-account@example.com"
 
     # Call the function with test arguments
     template_path = "gs://test-bucket/pipeline.yaml"
     display_name = "test-pipeline"
     pipeline_type = "training"
-    result = trigger_pipeline(template_path, display_name, pipeline_type)
+    result = trigger_pipeline(
+        template_path, display_name, pipeline_type, enable_caching
+    )
 
     # Assert that the function returned the expected object
     assert result == mock_pipeline_job_instance
@@ -43,10 +48,12 @@ def test_trigger_pipeline(mocker):
         template_path="gs://test-bucket/pipeline.yaml",
         parameter_values=expected_params,
         pipeline_root="gs://test-bucket",
-        enable_caching=True,
+        enable_caching=enable_caching,
         location="us-central1",
     )
 
     # Assert that run and wait were called on the PipelineJob instance
-    mock_pipeline_job_instance.run.assert_called_once()
+    mock_pipeline_job_instance.run.assert_called_once_with(
+        service_account="test-service-account@example.com"
+    )
     mock_pipeline_job_instance.wait.assert_called_once()

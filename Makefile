@@ -30,7 +30,8 @@ build: ## Build and push container.
 
 compile ?= true
 build ?= true
-run: ## Run a pipeline. Set pipeline=<training|prediction>. Optionally set compile=<true|false> (default=true), build=<true|false>.
+enable_caching ?= false
+run: ## Run a pipeline. Set pipeline=<training|prediction>. Optionally set compile=<true|false> (default=true), build=<true|false>, enable_caching=<true|false> (default=false).
 	@if [ $(compile) = "true" ]; then \
 		$(MAKE) compile ; \
 	elif [ $(compile) != "false" ]; then \
@@ -43,11 +44,15 @@ run: ## Run a pipeline. Set pipeline=<training|prediction>. Optionally set compi
 		echo "ValueError: build must be either true or false" ; \
 		exit ; \
 	fi && \
+	if [ $(enable_caching) != "true" ] && [ $(enable_caching) != "false" ]; then
+		echo "ValueError: enable_caching must be either true or false" ;
+		exit ;
+	fi && \
 	echo "################################################################################" && \
 	echo "# Run $$pipeline pipeline" && \
 	echo "################################################################################" && \
 	cd pipelines/src && \
-	poetry run python -m pipelines.utils.trigger_pipeline --template_path=./taxifare-${pipeline}-pipeline.yaml --display_name=taxifare-${pipeline}-pipeline --type=${pipeline}
+	poetry run python -m pipelines.utils.trigger_pipeline --template_path=./taxifare-${pipeline}-pipeline.yaml --display_name=taxifare-${pipeline}-pipeline --type=${pipeline} --enable_caching=${enable_caching}
 
 training: ## Run training pipeline. Supports same options as run.
 	@$(MAKE) run pipeline=training
