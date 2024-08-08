@@ -1,0 +1,21 @@
+steps:
+
+  # Apply terraform
+  - name: hashicorp/terraform:1.9.3
+    dir: /workspace/${_ENV_DIRECTORY}
+    entrypoint: /bin/sh
+    args:
+      - -c
+      - |
+        terraform init -input=false &&
+        terraform apply -auto-approve -input=false -var 'project_id=${_PROJECT_ID}' -var 'region=${_REGION}'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  # Either:
+  #   - terraform/environments/dev
+  #   - terraform/eenvironments/test
+  #   - terraform/environments/prod
+  _ENV_DIRECTORY: terraform/environments/test

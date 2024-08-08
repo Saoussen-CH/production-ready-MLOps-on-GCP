@@ -171,3 +171,11 @@ env.sh
 
 # ruff
 .ruff_cache/
+
+# Local .terraform directories
+**/.terraform/*
+
+# Terraform files
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl

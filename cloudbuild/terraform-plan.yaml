@@ -1,0 +1,21 @@
+steps:
+
+  # Terraform plan
+  - name: hashicorp/terraform:1.9.3
+    dir: /workspace/${_ENV_DIRECTORY}
+    entrypoint: /bin/sh
+    args:
+      - -c
+      - |
+        terraform init -input=false  && \
+        terraform plan -input=false -var 'project_id=${_PROJECT_ID}' -var 'region=${_REGION}'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  # Either:
+  #   - terraform/environments/dev
+  #   - terraform/environments/test
+  #   - terraform/eenvironments/prod
+  _ENV_DIRECTORY: terraform/environments/test
