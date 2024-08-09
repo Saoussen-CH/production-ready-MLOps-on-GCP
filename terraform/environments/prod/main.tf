@@ -14,12 +14,10 @@ terraform {
 
 
   }
-
-      # Terraform state stored in GCS
+  # Terraform state stored in GCS
   backend "gcs" {
-
+    bucket = "devlp-431918-tfstate"
   }
-
 }
 
 
