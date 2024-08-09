@@ -28,8 +28,7 @@ def get_hyperparameter_tuning_results_op(
 
     if len(study_spec_metrics) > 1:
         raise RuntimeError(
-            "Unable to determine best parameters for \
-             multi-objective hyperparameter tuning."
+            "Unable to determine best parameters for multi-objective hyperparameter tuning."  # noqa: E501
         )
 
     goal = study_spec_metrics[0]["goal"]
