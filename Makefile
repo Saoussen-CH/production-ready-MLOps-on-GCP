@@ -81,3 +81,16 @@ test-pipelines: ## Run unit tests for pipelines package
 e2e-tests: ##Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>.
 	cd pipelines && \
 	poetry run pytest tests/test_e2e.py --pipeline_type=${pipeline}
+
+setup-backend:
+	@echo "Setting up backend for environments $(project_id)"
+	@cd terraform/backend && \
+	terraform init && \
+	terraform plan  -var 'project_id=${project_id}' -out=plan.out && \
+	if [ -s plan.out ]; then \
+		echo "Changes detected. Applying the plan for the project"; \
+		terraform apply -auto-approve "plan.out";  \
+	else \
+		echo "No changes detected. Skipping apply for project"; \
+	fi; \
+	rm -f plan.out; \
