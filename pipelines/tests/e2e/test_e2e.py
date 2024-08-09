@@ -144,6 +144,7 @@ def pipeline_e2e_test(
     pipeline_func: Callable,
     pipeline_type: str,
     common_tasks: dict,
+    enable_caching: bool = False,
     **kwargs: dict,
 ):
     """
@@ -158,19 +159,19 @@ def pipeline_e2e_test(
         **kwargs (dict): conditional tasks groups in dictionary
     """
 
-    pipeline_json = f"test_{pipeline_type}_pipeline.yaml"
+    pipeline_yaml = f"test_{pipeline_type}_pipeline.yaml"
 
     compiler.Compiler().compile(
         pipeline_func=pipeline_func,
-        package_path=pipeline_json,
+        package_path=pipeline_yaml,
         type_check=False,
     )
 
-    payload = {"attributes": {"template_path": pipeline_json}}
+    payload = {"attributes": {"template_path": pipeline_yaml}}
 
     try:
         logging.info("Triggering pipeline with payload: %s", payload)
-        pl = trigger_pipeline_from_payload(payload, pipeline_type)
+        pl = trigger_pipeline_from_payload(payload, pipeline_type, enable_caching)
         logging.info("Pipeline triggered successfully, waiting for completion.")
         pl.wait()
         logging.info("Pipeline completed successfully.")
@@ -266,9 +267,7 @@ def test_pipeline_tasks(tasks: list, expected_tasks: dict, allow_tasks_missing: 
         actual_outputs = actual_tasks_expected[task_name]
         # 2-1. if the output artifact are as expected
         diff = set(expected_output).symmetric_difference(actual_outputs.keys())
-        assert (
-            len(diff) == 0
-        ), f"task: {task_name}, \
+        assert len(diff) == 0, f"task: {task_name}, \
             expected_output {expected_output}, \
             actual_outputs: {actual_outputs.keys()}"
         for output_artifact in expected_output:

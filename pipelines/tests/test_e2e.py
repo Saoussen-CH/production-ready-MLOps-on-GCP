@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def test_pipeline_run(pipeline_type: str) -> None:
+def test_pipeline_run(pipeline_type: str, enable_caching: bool) -> None:
     """
     Tests if pipeline is run successfully.
     Triggers pipeline synchronously.
@@ -34,7 +34,12 @@ def test_pipeline_run(pipeline_type: str) -> None:
     logger.info(f"Running {pipeline} pipeline...")
 
     try:
-        pipeline_e2e_test(pipeline, pipeline_type=pipeline_type, common_tasks={})
+        pipeline_e2e_test(
+            pipeline,
+            pipeline_type=pipeline_type,
+            common_tasks={},
+            enable_caching=enable_caching,
+        )
         logger.info(f"{pipeline} pipeline ran successfully.")
     except Exception as e:
         logger.error(f"Error running {pipeline} pipeline: {e}")

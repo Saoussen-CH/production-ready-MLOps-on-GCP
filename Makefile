@@ -78,9 +78,9 @@ test-pipelines: ## Run unit tests for pipelines package
 	poetry run pytest utils/test_upload_pipeline.py
 
 
-e2e-tests: ##Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>.
+e2e-tests: ##Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify enable_caching=<true|false> (defaults to default Vertex caching behaviour).
 	cd pipelines && \
-	poetry run pytest tests/test_e2e.py --pipeline_type=${pipeline}
+	poetry run pytest tests/test_e2e.py --pipeline_type=${pipeline} --enable_caching=$(enable_caching)
 
 setup-tfstate-backend: ## Create GCS bucket as a backend to store Terraform state.
 	@echo "################################################################################" && \

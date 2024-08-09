@@ -36,8 +36,8 @@ steps:
       curl -sSL https://install.python-poetry.org | python3 - &&
       export PATH="/builder/home/.local/bin:$$PATH" &&
       make install &&
-      make e2e-tests pipeline=training && \
-      make e2e-tests pipeline=prediction
+      make e2e-tests pipeline=training enable_caching=${_TEST_ENABLE_PIPELINE_CACHING} && \
+      make e2e-tests pipeline=prediction enable_caching=${_TEST_ENABLE_PIPELINE_CACHING}
   env:
     - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
     - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
