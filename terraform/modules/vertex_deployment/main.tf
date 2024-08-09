@@ -12,7 +12,7 @@ resource "google_project_service" "gcp_services" {
 # Vertex Pipelines service account
 resource "google_service_account" "pipelines_sa" {
   project      = var.project_id
-  account_id   = "vertex-pipelines-new"
+  account_id   = "vertex-pipelines"
   display_name = "Vertex Pipelines Service Account"
   depends_on   = [google_project_service.gcp_services]
 }
