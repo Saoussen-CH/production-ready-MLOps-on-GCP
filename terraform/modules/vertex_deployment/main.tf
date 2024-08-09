@@ -38,7 +38,7 @@ resource "google_vertex_ai_metadata_store" "default_metadata_store" {
 }
 
 ## Artifact Registry - container images ##
-resource "google_artifact_registry_repository" "mlops-docker-repo" {
+resource "google_artifact_registry_repository" "mlops_docker_repo" {
   repository_id = "mlops-docker-repo"
   description   = "Container image repository for training container images"
   project       = var.project_id
@@ -48,7 +48,7 @@ resource "google_artifact_registry_repository" "mlops-docker-repo" {
 }
 
 ## Artifact Registry - KFP pipelines ##
-resource "google_artifact_registry_repository" "mlops-pipeline-repo" {
+resource "google_artifact_registry_repository" "mlops_pipeline_repo" {
   repository_id = "mlops-pipeline-repo"
   description   = "KFP repository for Vertex Pipelines"
   project       = var.project_id
