@@ -78,19 +78,37 @@ test-pipelines: ## Run unit tests for pipelines package
 	poetry run pytest utils/test_upload_pipeline.py
 
 
-e2e-tests: ##Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>.
+e2e-tests: ##Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify enable_caching=<true|false> (defaults to default Vertex caching behaviour).
 	cd pipelines && \
-	poetry run pytest tests/test_e2e.py --pipeline_type=${pipeline}
+	poetry run pytest tests/test_e2e.py --pipeline_type=${pipeline} --enable_caching=$(enable_caching)
 
-setup-backend:
-	@echo "Setting up backend for environments $(project_id)"
-	@cd terraform/backend && \
-	terraform init && \
-	terraform plan  -var 'project_id=${project_id}' -out=plan.out && \
-	if [ -s plan.out ]; then \
-		echo "Changes detected. Applying the plan for the project"; \
-		terraform apply -auto-approve "plan.out";  \
-	else \
-		echo "No changes detected. Skipping apply for project"; \
+setup-tfstate-backend: ## Create GCS bucket as a backend to store Terraform state.
+	@echo "################################################################################" && \
+	echo "# Set up a Terraform state bucket for project ${VERTEX_PROJECT_ID} " && \
+	echo "################################################################################" && \
+	gsutil mb -l ${VERTEX_LOCATION} -p ${VERTEX_PROJECT_ID} --pap=enforced gs://${VERTEX_PROJECT_ID}-tfstate && \
+    gsutil ubla set on gs://${VERTEX_PROJECT_ID}-tfstate
+
+env ?= dev
+AUTO_APPROVE_FLAG :=
+deploy: ## Deploy infrastructure to your project. Optionally set env=<dev|test|prod> (default=dev).
+	@echo "################################################################################" && \
+	echo "# Deploy $$env environment" && \
+	echo "################################################################################" && \
+	if [ "$(auto-approve)" = "true" ]; then \
+		AUTO_APPROVE_FLAG="-auto-approve"; \
 	fi; \
-	rm -f plan.out; \
+	cd terraform/environments/$(env) && \
+	terraform init -backend-config='bucket=${VERTEX_PROJECT_ID}-tfstate' && \
+	terraform apply -var 'project_id=${VERTEX_PROJECT_ID}' -var 'region=${VERTEX_LOCATION}' $$AUTO_APPROVE_FLAG
+
+undeploy: ## Destroy the infrastructure in your project. Optionally set env=<dev|test|prod> (default=dev).
+	@echo "################################################################################" && \
+	echo "# Destroy $$env environment" && \
+	echo "################################################################################" && \
+	if [ "$(auto-approve)" = "true" ]; then \
+		AUTO_APPROVE_FLAG="-auto-approve"; \
+	fi; \
+	cd terraform/environments/$(env) && \
+	terraform init -input=false -backend-config='bucket=${VERTEX_PROJECT_ID}-tfstate' && \
+	terraform destroy -var 'project_id=${VERTEX_PROJECT_ID}' -var 'region=${VERTEX_LOCATION}' $$AUTO_APPROVE_FLAG

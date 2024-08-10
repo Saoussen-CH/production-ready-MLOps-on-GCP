@@ -4,7 +4,9 @@ from google.cloud import aiplatform
 from pipelines.utils.trigger_pipeline import trigger_pipeline
 
 
-def trigger_pipeline_from_payload(payload: dict, type: str) -> aiplatform.PipelineJob:
+def trigger_pipeline_from_payload(
+    payload: dict, type: str, enable_caching: bool
+) -> aiplatform.PipelineJob:
     """Triggers a pipeline run from a payload dict, JSON pipeline definition,
     and env variables.
     Args:
@@ -18,6 +20,7 @@ def trigger_pipeline_from_payload(payload: dict, type: str) -> aiplatform.Pipeli
         template_path=payload["attributes"]["template_path"],
         display_name="test_trigger_pipeline",
         type=type,
+        enable_caching=enable_caching,
     )
 
 

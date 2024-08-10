@@ -14,12 +14,10 @@ terraform {
 
 
   }
-
-      # Terraform state stored in GCS
+  # Terraform state stored in GCS
   backend "gcs" {
 
   }
-
 }
 
 
