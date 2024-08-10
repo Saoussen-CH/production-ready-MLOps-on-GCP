@@ -10,7 +10,6 @@ from pathlib import Path
 from tensorflow.data import Dataset
 from tensorflow.keras import Input, Model, optimizers
 from tensorflow.keras.layers import Dense, Normalization, StringLookup, Concatenate
-from tensorflow.keras import callbacks
 
 # numeric/categorical features in Chicago trips dataset to be preprocessed
 import hypertune
@@ -138,6 +137,52 @@ def build_and_compile_model(dataset: Dataset, model_params: dict) -> Model:
     return model
 
 
+def configure_keras_callbacks(
+    checkpoints_dir,
+    hypertune,
+    hypertune_kwargs,
+    earlystopping,
+    earlystopping_kwargs,
+):
+    callbacks = []
+
+    class HyperTuneCallback(tf.keras.callbacks.Callback):
+        def __init__(self, metric=None) -> None:
+            super().__init__()
+            self.metric = metric
+            self.hpt = hypertune.HyperTune()
+
+        def on_epoch_end(self, epoch, logs=None):
+            if logs and self.metric in logs:
+                self.hpt.report_hyperparameter_tuning_metric(
+                    hyperparameter_metric_tag=self.metric,
+                    metric_value=logs[self.metric],
+                    global_step=epoch,
+                )
+
+    logging.info("Use HyperParametersTuning")
+    if hypertune:
+        callbacks.append(HyperTuneCallback(**hypertune_kwargs))
+
+    logging.info("Use ModelCheckpointing")
+    if checkpoints_dir:
+        callbacks.append(
+            tf.keras.callbacks.ModelCheckpoint(
+                checkpoints_dir, save_weights_only=True, verbose=1
+            )
+        )
+
+    logging.info("Use early stopping")
+    if earlystopping:
+        callbacks.append(
+            tf.keras.callbacks.EarlyStopping(
+                monitor="val_loss", mode="min", patience=earlystopping_kwargs
+            )
+        )
+
+    return callbacks
+
+
 def train_and_evaluate(params):
     if params["model"].startswith("gs://"):
         if params["metrics"] == "":
@@ -183,21 +228,14 @@ def train_and_evaluate(params):
 
     # steps_per_epoch = len(train_ds) // (hparams["batch_size"] * hparams["epochs"])
     # Define the callbacks
-    hypertune_cb = None
-    if params.get("hypertune"):
-        hypertune_cb = HyperTuneCallback(metric="val_root_mean_squared_error")
 
-    checkpoint_cb = callbacks.ModelCheckpoint(
-        params["checkpoints"], save_weights_only=True, verbose=1
+    callbacks = configure_keras_callbacks(
+        checkpoints_dir=params["checkpoints"],
+        hypertune=params.get("hypertune"),
+        hypertune_kwargs=dict(metric="val_root_mean_squared_error"),
+        earlystopping=True,
+        earlystopping_kwargs=hparams["early_stopping_epochs"],
     )
-    logging.info("Use early stopping")
-    earlystopping_cb = tf.keras.callbacks.EarlyStopping(
-        monitor="val_loss", mode="min", patience=hparams["early_stopping_epochs"]
-    )
-
-    callback_list = [checkpoint_cb, earlystopping_cb]
-    if hypertune_cb:
-        callback_list.append(hypertune_cb)
 
     history = model.fit(
         train_ds,
@@ -206,7 +244,7 @@ def train_and_evaluate(params):
         epochs=hparams["epochs"],
         # steps_per_epoch=max(1, steps_per_epoch),
         verbose=2,  # 0=silent, 1=progress bar, 2=one line per epoch
-        callbacks=callback_list,
+        callbacks=callbacks,
     )
 
     logging.info(f"Save model to: {params['model']}")
