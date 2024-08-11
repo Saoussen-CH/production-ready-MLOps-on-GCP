@@ -39,16 +39,6 @@ DEFAULT_HPARAMS = dict(
     loss_fn="MeanSquaredError",
     optimizer="Adam",
     learning_rate=0.001,
-    metrics=[
-        tf.keras.metrics.RootMeanSquaredError(name="root_mean_squared_error"),
-        tf.keras.metrics.MeanAbsoluteError(name="mean_absolute_error"),
-        tf.keras.metrics.MeanAbsolutePercentageError(
-            name="mean_absolute_percentage_error"
-        ),
-        tf.keras.metrics.MeanSquaredLogarithmicError(
-            name="mean_squared_logarithmic_error"
-        ),
-    ],
     hidden_units=[(10, "relu")],
     early_stopping_epochs=5,
     label="total_fare",
@@ -132,10 +122,23 @@ def build_and_compile_model(dataset: Dataset, model_params: dict) -> Model:
     optimizer = optimizers.get(model_params["optimizer"])
     optimizer.learning_rate = model_params["learning_rate"]
 
+    # Create metrics within the distribution strategy scope
+    with tf.distribute.get_strategy().scope():
+        metrics = [
+            tf.keras.metrics.RootMeanSquaredError(name="root_mean_squared_error"),
+            tf.keras.metrics.MeanAbsoluteError(name="mean_absolute_error"),
+            tf.keras.metrics.MeanAbsolutePercentageError(
+                name="mean_absolute_percentage_error"
+            ),
+            tf.keras.metrics.MeanSquaredLogarithmicError(
+                name="mean_squared_logarithmic_error"
+            ),
+        ]
+
     model.compile(
         loss=model_params["loss_fn"],
         optimizer=optimizer,
-        metrics=model_params["metrics"],
+        metrics=metrics,
     )
 
     return model
