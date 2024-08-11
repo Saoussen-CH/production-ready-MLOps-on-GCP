@@ -52,6 +52,7 @@ DEFAULT_HPARAMS = dict(
     hidden_units=[(10, "relu")],
     early_stopping_epochs=5,
     label="total_fare",
+    distribute_strategy="single",
 )
 
 logging.getLogger().setLevel(logging.INFO)
