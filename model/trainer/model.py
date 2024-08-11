@@ -3,7 +3,7 @@
 import os
 import json
 import logging
-
+import sys
 
 import tensorflow as tf
 from pathlib import Path
@@ -146,20 +146,6 @@ def configure_keras_callbacks(
 ):
     callbacks = []
 
-    class HyperTuneCallback(tf.keras.callbacks.Callback):
-        def __init__(self, metric=None) -> None:
-            super().__init__()
-            self.metric = metric
-            self.hpt = hypertune.HyperTune()
-
-        def on_epoch_end(self, epoch, logs=None):
-            if logs and self.metric in logs:
-                self.hpt.report_hyperparameter_tuning_metric(
-                    hyperparameter_metric_tag=self.metric,
-                    metric_value=logs[self.metric],
-                    global_step=epoch,
-                )
-
     logging.info("Use HyperParametersTuning")
     if hypertune:
         callbacks.append(HyperTuneCallback(**hypertune_kwargs))
@@ -181,6 +167,45 @@ def configure_keras_callbacks(
         )
 
     return callbacks
+
+
+def get_distribution_strategy(distribute_strategy: str) -> tf.distribute.Strategy:
+    """Set distribute strategy based on input string.
+    Args:
+        distribute_strategy (str): single, mirror or multi
+    Returns:
+        strategy (tf.distribute.Strategy): distribution strategy
+    """
+    logging.info(f"Distribution strategy: {distribute_strategy}")
+
+    # Single machine, single compute device
+    if distribute_strategy == "single":
+        if len(tf.config.list_physical_devices("GPU")):
+            strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
+        else:
+            strategy = tf.distribute.OneDeviceStrategy(device="/cpu:0")
+    # Single machine, multiple compute device
+    elif distribute_strategy == "mirror":
+        strategy = tf.distribute.MirroredStrategy()
+    # Multiple machine, multiple compute device
+    elif distribute_strategy == "multi":
+        strategy = tf.distribute.MultiWorkerMirroredStrategy()
+    else:
+        raise RuntimeError(f"Distribute strategy: {distribute_strategy} not supported")
+    return strategy
+
+
+def _is_chief(strategy: tf.distribute.Strategy) -> bool:
+    """Determine whether current worker is the chief (master). See more info:
+    - https://www.tensorflow.org/tutorials/distribute/multi_worker_with_keras
+    - https://www.tensorflow.org/api_docs/python/tf/distribute/cluster_resolver/ClusterResolver # noqa: E501
+    Args:
+        strategy (tf.distribute.Strategy): strategy
+    Returns:
+        is_chief (bool): True if worker is chief, otherwise False
+    """
+    cr = strategy.cluster_resolver
+    return (cr is None) or (cr.task_type == "chief" and cr.task_id == 0)
 
 
 def train_and_evaluate(params):
@@ -215,6 +240,9 @@ def train_and_evaluate(params):
 
     label = hparams["label"]
 
+    # Set distribute strategy before any TF operations
+    strategy = get_distribution_strategy(hparams["distribute_strategy"])
+
     train_ds = create_dataset(params["train_data"], label, hparams)
     valid_ds = create_dataset(params["valid_data"], label, hparams)
     test_ds = create_dataset(params["test_data"], label, hparams)
@@ -224,7 +252,8 @@ def train_and_evaluate(params):
     logging.info(f"Training feature names: {train_features}")
     logging.info(f"Validation feature names: {valid_features}")
 
-    model = build_and_compile_model(train_ds, hparams)
+    with strategy.scope():
+        model = build_and_compile_model(train_ds, hparams)
 
     # steps_per_epoch = len(train_ds) // (hparams["batch_size"] * hparams["epochs"])
     # Define the callbacks
@@ -247,8 +276,12 @@ def train_and_evaluate(params):
         callbacks=callbacks,
     )
 
-    logging.info(f"Save model to: {params['model']}")
+    # only persist output files if current worker is chief
+    if not _is_chief(strategy):
+        logging.info("not chief node, exiting now")
+        sys.exit()
 
+    logging.info(f"Save model to: {params['model']}")
     if not os.path.exists(params["model"]):
         logging.info(f"Create model directory : {params['model']}")
         params["model"].mkdir(parents=True)
