@@ -319,7 +319,7 @@ def train_and_evaluate(params):
     # for the expected schema.
     path = params["model"] / TRAINING_DATASET_INFO
     training_dataset_for_monitoring = {
-        "gcsSource": {"uris": params["train_data"]},
+        "gcsSource": {"uris": [params["train_data"]]},
         "dataFormat": "csv",
         "targetField": label,
     }
