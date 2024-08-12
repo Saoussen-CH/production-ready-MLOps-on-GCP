@@ -30,25 +30,19 @@ class HyperTuneCallback(tf.keras.callbacks.Callback):
             )
 
 
+# used for monitoring during prediction time
+TRAINING_DATASET_INFO = "training_dataset.json"
+
 DEFAULT_HPARAMS = dict(
     batch_size=100,
     epochs=10,
     loss_fn="MeanSquaredError",
     optimizer="Adam",
     learning_rate=0.001,
-    metrics=[
-        tf.keras.metrics.RootMeanSquaredError(name="root_mean_squared_error"),
-        tf.keras.metrics.MeanAbsoluteError(name="mean_absolute_error"),
-        tf.keras.metrics.MeanAbsolutePercentageError(
-            name="mean_absolute_percentage_error"
-        ),
-        tf.keras.metrics.MeanSquaredLogarithmicError(
-            name="mean_squared_logarithmic_error"
-        ),
-    ],
     hidden_units=[(10, "relu")],
     early_stopping_epochs=5,
     label="total_fare",
+    distribute_strategy="single",
 )
 
 logging.getLogger().setLevel(logging.INFO)
@@ -128,10 +122,23 @@ def build_and_compile_model(dataset: Dataset, model_params: dict) -> Model:
     optimizer = optimizers.get(model_params["optimizer"])
     optimizer.learning_rate = model_params["learning_rate"]
 
+    # Create metrics within the distribution strategy scope
+    with tf.distribute.get_strategy().scope():
+        metrics = [
+            tf.keras.metrics.RootMeanSquaredError(name="root_mean_squared_error"),
+            tf.keras.metrics.MeanAbsoluteError(name="mean_absolute_error"),
+            tf.keras.metrics.MeanAbsolutePercentageError(
+                name="mean_absolute_percentage_error"
+            ),
+            tf.keras.metrics.MeanSquaredLogarithmicError(
+                name="mean_squared_logarithmic_error"
+            ),
+        ]
+
     model.compile(
         loss=model_params["loss_fn"],
         optimizer=optimizer,
-        metrics=model_params["metrics"],
+        metrics=metrics,
     )
 
     return model
@@ -306,5 +313,20 @@ def train_and_evaluate(params):
     logging.info(f"Save metrics to: {params['metrics']}")
     with open(os.path.join(params["metrics"], "metrics.json"), "w") as fh:
         json.dump(metrics, fh)
+
+    # Persist URIs of training file(s) for model monitoring in batch predictions
+    # See https://cloud.google.com/python/docs/reference/aiplatform/latest/google.cloud.aiplatform_v1beta1.types.ModelMonitoringObjectiveConfig.TrainingDataset  # noqa: E501
+    # for the expected schema.
+    path = params["model"] / TRAINING_DATASET_INFO
+    training_dataset_for_monitoring = {
+        "gcsSource": {"uris": [params["train_data"]]},
+        "dataFormat": "csv",
+        "targetField": label,
+    }
+    logging.info(f"Save training dataset info for model monitoring: {path}")
+    logging.info(f"Training dataset: {training_dataset_for_monitoring}")
+
+    with open(path, "w") as fp:
+        json.dump(training_dataset_for_monitoring, fp)
 
     return history
