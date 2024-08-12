@@ -69,6 +69,8 @@ def lookup_model_op(
         if os.path.exists(path):
             with open(path, "r") as fp:
                 training_dataset = json.load(fp)
+            logging.info(f"Training dataset info for model monitoring path: {path}")
+            logging.info(f"Training dataset: {training_dataset}")
         else:
             logging.warning("Training dataset metadata doesn't exist!")
     else:
