@@ -27,8 +27,6 @@ def upload_pipeline(file_name: str, tags: List[str]) -> tuple[str, str]:
         },
     )
 
-    # TEMPLATE_URI = f"{host}/{TEMPLATE_NAME}/latest"
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
