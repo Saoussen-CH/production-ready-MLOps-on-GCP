@@ -1,27 +1,14 @@
 steps:
 - id: build-training-image
   name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', '${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-docker-repo/${_IMAGE_NAME}:${COMMIT_SHA}', '.']
   dir: 'model'
-  env:
-    - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
-    - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
-    - BQ_LOCATION=${_TEST_BQ_LOCATION}
-    - VERTEX_PIPELINE_ROOT=${_TEST_VERTEX_PIPELINE_ROOT}
-    - IMAGE_NAME=${_IMAGE_NAME}
-    - IMAGE_TAG=${COMMIT_SHA}
+  args: ['build', '-t', '${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-docker-repo/${_IMAGE_NAME}:${COMMIT_SHA}', '.']
   waitFor: ['-']
+
 - id: push-training-image
   name: 'gcr.io/cloud-builders/docker'
-  args: ['push', '${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-docker-repo/${_IMAGE_NAME}:${COMMIT_SHA}']
   dir: 'model'
-  env:
-    - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
-    - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
-    - BQ_LOCATION=${_TEST_BQ_LOCATION}
-    - VERTEX_PIPELINE_ROOT=${_TEST_VERTEX_PIPELINE_ROOT}
-    - IMAGE_NAME=${_IMAGE_NAME}
-    - IMAGE_TAG=${COMMIT_SHA}
+  args: ['push', '${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-docker-repo/${_IMAGE_NAME}:${COMMIT_SHA}']
   waitFor:
     - build-training-image
 
