@@ -23,30 +23,31 @@ steps:
         export PATH="/builder/home/.local/bin:$$PATH" && \
         make install && \
         for proj in ${_DESTINATION_PROJECTS} ; do \
-          export CONTAINER_IMAGE_AR=${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/mlops-docker-repo  && \
-          export KFP_TEMPLATE_AR=https://${_VERTEX_LOCATION}-kfp.pkg.dev/$$proj/mlops-pipeline-repo  && \
-          make compile pipeline=training && \
-          make compile pipeline=prediction && \
-          cd pipelines/src && \
-          if [ ! -f "taxifare-training-pipeline.yaml" ]; then \
-            echo "Error: taxifare-training-pipeline.yaml not found in pipelines/src" && \
-            exit 1; \
-          fi && \
-          if [ ! -f "taxifare-prediction-pipeline.yaml" ]; then \
-            echo "Error: taxifare-prediction-pipeline.yaml not found in pipelines/src" && \
-            exit 1; \
-          fi && \
-          echo "Running upload_pipeline for training pipeline..." && \
-          poetry run python -m pipelines.utils.upload_pipeline \
-          --template_path=taxifare-training-pipeline.yaml \
-          --tag=latest \
-          --tag=${TAG_NAME} && \
-          echo "Running upload_pipeline for prediction pipeline..." && \
-          poetry run python -m pipelines.utils.upload_pipeline \
-          --template_path=taxifare-prediction-pipeline.yaml \
-          --tag=latest \
-          --tag=${TAG_NAME}; \
-          cd .. ; \
+          export CONTAINER_IMAGE_AR=${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/mlops-docker-repo && \
+          export KFP_TEMPLATE_AR=https://${_VERTEX_LOCATION}-kfp.pkg.dev/$$proj/mlops-pipeline-repo && \
+          ( \
+            make compile pipeline=training && \
+            make compile pipeline=prediction && \
+            cd pipelines/src && \
+            if [ ! -f "taxifare-training-pipeline.yaml" ]; then \
+              echo "Error: taxifare-training-pipeline.yaml not found in pipelines/src" && \
+              exit 1; \
+            fi && \
+            if [ ! -f "taxifare-prediction-pipeline.yaml" ]; then \
+              echo "Error: taxifare-prediction-pipeline.yaml not found in pipelines/src" && \
+              exit 1; \
+            fi && \
+            echo "Running upload_pipeline for training pipeline..." && \
+            poetry run python -m pipelines.utils.upload_pipeline \
+            --template_path=taxifare-training-pipeline.yaml \
+            --tag=latest \
+            --tag=${TAG_NAME} && \
+            echo "Running upload_pipeline for prediction pipeline..." && \
+            poetry run python -m pipelines.utils.upload_pipeline \
+            --template_path=taxifare-prediction-pipeline.yaml \
+            --tag=latest \
+            --tag=${TAG_NAME} \
+          ) \
         done
 
 options:
