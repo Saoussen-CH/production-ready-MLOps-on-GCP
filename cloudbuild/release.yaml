@@ -46,6 +46,7 @@ steps:
           --template_path=taxifare-prediction-pipeline.yaml \
           --tag=latest \
           --tag=${TAG_NAME}; \
+          cd .. ; \
         done
 
 options:
