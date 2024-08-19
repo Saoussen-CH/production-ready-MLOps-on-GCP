@@ -1,6 +1,6 @@
 steps:
-  # Step to schedule the training pipeline
-  - id: schedule-training-pipeline
+  # Step to schedule the pipelines
+  - id: schedule-pipelines
     name: python:3.10.14
     entrypoint: /bin/sh
     args:
