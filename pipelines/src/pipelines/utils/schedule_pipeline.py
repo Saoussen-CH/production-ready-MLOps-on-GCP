@@ -1,5 +1,6 @@
 import argparse
 from google.cloud import aiplatform
+from os import environ as env
 
 
 def schedule_pipeline(
@@ -23,6 +24,11 @@ def schedule_pipeline(
     Returns:
         pipeline_job_schedules.PipelineJobSchedule: The scheduled pipeline job.
     """
+    project = env.get("VERTEX_PROJECT_ID")
+    location = env.get("VERTEX_LOCATION")
+    service_account = env.get("VERTEX_SA_EMAIL")
+
+    aiplatform.init(project=project, location=location)
 
     pipeline_job = aiplatform.PipelineJob(
         template_path=template_path,
@@ -34,6 +40,7 @@ def schedule_pipeline(
     pipeline_job_schedule = pipeline_job.create_schedule(
         cron=cron,
         display_name=schedule_name,
+        service_account=service_account,
     )
 
     print(f"Schedule created: {pipeline_job_schedule}")
