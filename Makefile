@@ -5,13 +5,18 @@ help: ## Display this help screen
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 install: ## Set up local Python environment for development.
-	@echo "################################################################################" && \
-	echo "# Install Python dependencies" && \
-	echo "################################################################################" && \
-	cd pipelines && \
-	poetry install --with dev && \
-	cd ../components && \
+	@echo "################################################################################"
+	@echo "# Installing Python dependencies for pipelines..."
+	@echo "################################################################################"
+	cd $(CURDIR)/pipelines && \
 	poetry install --with dev
+
+	@echo "################################################################################"
+	@echo "# Installing Python dependencies for components..."
+	@echo "################################################################################"
+	cd $(CURDIR)/components && \
+	poetry install --with dev
+
 
 compile: ## Compile pipeline. Set pipeline=<training|prediction>.
 	@echo "################################################################################" && \
