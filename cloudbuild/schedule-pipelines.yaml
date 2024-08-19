@@ -13,14 +13,14 @@ steps:
         poetry run python schedule_pipeline.py \
           --pipeline_type training \
           --template_path https://\${_TEST_VERTEX_LOCATION}-kfp.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-pipeline-repo/${_IMAGE_NAME}/${_TAG_NAME} \
-          --pipeline_root gs://${_VERTEX_PIPELINE_ROOT}/pipeline-root \
+          --pipeline_root gs://${_TEST_VERTEX_PROJECT_ID}/pl-root \
           --display_name ${_ENV}-training-pipeline \
           --schedule_name ${_ENV}-training-schedule \
           --cron "0 0 1 * *" \
         poetry run python schedule_pipeline.py \
           --pipeline_type prediction \
           --template_path https://${_TEST_VERTEX_LOCATION}-kfp.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-pipeline-repo/${_IMAGE_NAME}/${_TAG_NAME} \
-          --pipeline_root gs://${_VERTEX_PIPELINE_ROOT}/pipeline-root \
+          --pipeline_root gs://${_TEST_VERTEX_PROJECT_ID}/pl-root \
           --display_name ${_ENV}-prediction-pipeline \
           --schedule_name ${_ENV}-prediction-schedule \
           --cron "0 0 * * *" \
@@ -28,8 +28,6 @@ steps:
     env:
       - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
       - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
-      - VERTEX_PIPELINE_ROOT=${_VERTEX_PIPELINE_ROOT}
-      - IMAGE_NAME=${_IMAGE_NAME}
 
 options:
   logging: CLOUD_LOGGING_ONLY
