@@ -54,6 +54,7 @@ steps:
           --schedule_name=${_ENV}-training-schedule \
           --cron="0 0 1 * *"
 
+
         # Run schedule_pipeline for prediction
         echo "################################################################################"
         echo "# Scheduling prediction pipeline..."
@@ -65,6 +66,7 @@ steps:
           --display_name=${_ENV}-prediction-pipeline \
           --schedule_name=${_ENV}-prediction-schedule \
           --cron="0 0 * * *"
+
 
     env:
       - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
