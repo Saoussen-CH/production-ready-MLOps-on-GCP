@@ -30,7 +30,6 @@ steps:
       - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
       - VERTEX_PIPELINE_ROOT=${_VERTEX_PIPELINE_ROOT}
       - IMAGE_NAME=${_IMAGE_NAME}
-      - _ENV=\${_ENV}
 
 options:
   logging: CLOUD_LOGGING_ONLY

@@ -21,7 +21,6 @@ def schedule_pipeline(
         display_name (str): The display name for the pipeline.
         schedule_name (str): The name of the schedule.
         cron (str): Cron expression for scheduling the pipeline run.
-        max_concurrent_run_count (int): Maximum number of concurrent runs.
 
     Returns:
         aiplatform.pipeline_jobs.PipelineJobSchedule: The scheduled pipeline job.
@@ -79,18 +78,7 @@ def main():
         required=True,
         help="Cron expression for scheduling.",
     )
-    parser.add_argument(
-        "--max_concurrent_run_count",
-        type=int,
-        required=True,
-        help="Maximum number of concurrent runs.",
-    )
-    parser.add_argument(
-        "--max_run_count",
-        type=int,
-        required=True,
-        help="Maximum number of runs.",
-    )
+
     parser.add_argument(
         "--enable_caching",
         action="store_true",
