@@ -74,7 +74,3 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 timeout: 18000s  # 5 hours
-
-  logging: CLOUD_LOGGING_ONLY
-
-timeout: 18000s  # 5 hours
