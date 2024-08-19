@@ -1,0 +1,36 @@
+steps:
+  # Step to schedule the training pipeline
+  - id: schedule-training-pipeline
+    name: python:3.10.14
+    entrypoint: /bin/sh
+    args:
+      - -c
+      - |
+        set -e  # Exit on error
+        curl -sSL https://install.python-poetry.org | python3 - && \
+        export PATH="/builder/home/.local/bin:$$PATH" && \
+        make install && \
+        poetry run python schedule_pipeline.py \
+          --pipeline_type training \
+          --template_path https://\${_TEST_VERTEX_LOCATION}-kfp.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-pipeline-repo/${_IMAGE_NAME}/${_TAG_NAME} \
+          --pipeline_root gs://${_VERTEX_PIPELINE_ROOT}/pipeline-root \
+          --display_name ${_ENV}-training-pipeline \
+          --schedule_name ${_ENV}-training-schedule \
+          --cron "0 0 1 * *" \
+        poetry run python schedule_pipeline.py \
+          --pipeline_type prediction \
+          --template_path https://${_TEST_VERTEX_LOCATION}-kfp.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-pipeline-repo/${_IMAGE_NAME}/${_TAG_NAME} \
+          --pipeline_root gs://${_VERTEX_PIPELINE_ROOT}/pipeline-root \
+          --display_name ${_ENV}-prediction-pipeline \
+          --schedule_name ${_ENV}-prediction-schedule \
+          --cron "0 0 * * *" \
+
+    env:
+      - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
+      - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
+      - VERTEX_PIPELINE_ROOT=${_VERTEX_PIPELINE_ROOT}
+      - IMAGE_NAME=${_IMAGE_NAME}
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  timeout: 18000s  # 5 hours
