@@ -8,10 +8,8 @@ def schedule_pipeline(
     display_name: str,
     schedule_name: str,
     cron: str,
-    max_concurrent_run_count: int,
-    max_run_count: int,
     enable_caching: bool = False,
-) -> aiplatform.pipeline_jobs.PipelineJobSchedule:
+) -> aiplatform.pipeline_job_schedules.PipelineJobSchedule:
     """
     Schedule a Vertex AI pipeline run based on the provided configuration.
 
@@ -23,7 +21,7 @@ def schedule_pipeline(
         cron (str): Cron expression for scheduling the pipeline run.
 
     Returns:
-        aiplatform.pipeline_jobs.PipelineJobSchedule: The scheduled pipeline job.
+        pipeline_job_schedules.PipelineJobSchedule: The scheduled pipeline job.
     """
 
     pipeline_job = aiplatform.PipelineJob(
