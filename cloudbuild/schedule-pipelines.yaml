@@ -22,6 +22,82 @@ steps:
 
         # Navigate to the source directory
         echo "################################################################################"
+        echo "# Changing directory to pipelines..."
+        echo "################################################################################"
+        cd pipelines && \
+        
+        # Log current directory and contents
+        echo "################################################################################"
+        echo "# Current directory: $(pwd)"
+        echo "Files in directory:"
+        ls -la
+        echo "################################################################################"
+
+        # Check if pyproject.toml exists
+        echo "Checking for pyproject.toml..."
+        if [ -f "pyproject.toml" ]; then
+          echo "pyproject.toml found."
+        else
+          echo "Error: pyproject.toml not found."
+          exit 1
+        fi
+
+        # Run schedule_pipeline for training
+        echo "################################################################################"
+        echo "# Scheduling training pipeline..."
+        echo "################################################################################"
+        poetry run python -m src.pipelines.utils.schedule_pipeline \
+          --pipeline_type=training \
+          --template_path=https://\${_TEST_VERTEX_LOCATION}-kfp.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-pipeline-repo/taxifare-training-pipeline/${_TAG_NAME} \
+          --pipeline_root=gs://${_TEST_VERTEX_PROJECT_ID}/pl-root \
+          --display_name=${_ENV}-training-pipeline \
+          --schedule_name=${_ENV}-training-schedule \
+          --cron="0 0 1 * *" 
+
+        # Run schedule_pipeline for prediction
+        echo "################################################################################"
+        echo "# Scheduling prediction pipeline..."
+        echo "################################################################################"
+        poetry run python -m src.pipelines.utils.schedule_pipeline \
+          --pipeline_type=prediction \
+          --template_path=https://${_TEST_VERTEX_LOCATION}-kfp.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-pipeline-repo/taxifare-batch-prediction-pipeline/${_TAG_NAME} \
+          --pipeline_root=gs://${_TEST_VERTEX_PROJECT_ID}/pl-root \
+          --display_name=${_ENV}-prediction-pipeline \
+          --schedule_name=${_ENV}-prediction-schedule \
+          --cron="0 0 * * *" 
+
+    env:
+      - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
+      - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 18000s  # 5 hours
+steps:
+  # Step to schedule the pipelines
+  - id: schedule-pipelines
+    name: python:3.10.14
+    entrypoint: /bin/sh
+    args:
+      - -c
+      - |
+        # Install Poetry
+        echo "################################################################################"
+        echo "# Installing Poetry..."
+        echo "################################################################################"
+        curl -sSL https://install.python-poetry.org | python3 - && \
+        export PATH="/builder/home/.local/bin:$$PATH" && \
+        echo "Poetry installed. Path updated."
+
+        # Install dependencies
+        echo "################################################################################"
+        echo "# Installing Python dependencies..."
+        echo "################################################################################"
+        make install
+
+        # Navigate to the source directory
+        echo "################################################################################"
         echo "# Changing directory to pipelines/src..."
         echo "################################################################################"
         cd pipelines/src && \
