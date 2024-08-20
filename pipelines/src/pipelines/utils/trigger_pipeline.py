@@ -2,6 +2,8 @@ from google.cloud import aiplatform
 import argparse
 from os import environ as env
 
+import logging
+
 
 def trigger_pipeline(
     template_path: str,
@@ -20,7 +22,7 @@ def trigger_pipeline(
     Returns:
         aiplatform.pipeline_jobs.PipelineJob: the Vertex PipelineJob object
     """
-
+    logging.info(f"Enable Caching in Trigger: {enable_caching}")
     # Retrieve environment variables
     project = env.get("VERTEX_PROJECT_ID")
     location = env.get("VERTEX_LOCATION")

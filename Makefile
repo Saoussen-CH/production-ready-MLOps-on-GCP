@@ -35,7 +35,7 @@ build: ## Build and push container.
 
 compile ?= true
 build ?= true
-enable_caching ?= False
+enable_caching ?= false
 run: ## Run a pipeline. Set pipeline=<training|prediction>. Optionally set compile=<true|false> (default=true), build=<true|false>, enable_caching=<true|false> (default=false).
 	@if [ $(compile) = "true" ]; then \
 		$(MAKE) compile ; \
@@ -82,8 +82,12 @@ test-pipelines: ## Run unit tests for pipelines package
 	poetry run pytest utils/test_trigger_pipelines.py &&\
 	poetry run pytest utils/test_upload_pipeline.py
 
-
-e2e-tests: ##Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify enable_caching=<true|false> (defaults to default Vertex caching behaviour).
+enable_caching ?= false
+e2e-tests: ## Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify enable_caching=<true|false> (defaults to default Vertex caching behaviour).
+	@if [ $(enable_caching) != "true" ] && [ $(enable_caching) != "false" ]; then \
+		echo "ValueError: enable_caching must be either true or false" ; \
+		exit ; \
+	fi && \
 	cd pipelines && \
 	poetry run pytest tests/test_e2e.py --pipeline_type=${pipeline} --enable_caching=$(enable_caching)
 

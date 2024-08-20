@@ -1,7 +1,6 @@
 import logging
 from pipelines.training import pipeline as training_pipeline
 from pipelines.prediction import pipeline as prediction_pipeline
-
 from tests.e2e.test_e2e import pipeline_e2e_test
 
 # Configure logging
@@ -9,7 +8,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+# @pytest.mark.parametrize("pipeline_type", ["training", "prediction"])
+# @pytest.mark.parametrize("enable_caching", [True, False])
 def test_pipeline_run(pipeline_type: str, enable_caching: bool) -> None:
+    logger.info(f"Pipeline Type: {pipeline_type}, Enable Caching: {enable_caching}")
     """
     Tests if pipeline is run successfully.
     Triggers pipeline synchronously.
@@ -19,10 +21,12 @@ def test_pipeline_run(pipeline_type: str, enable_caching: bool) -> None:
 
     Arguments:
         pipeline_type (str): The type of pipeline to run ('training' or 'prediction').
+        enable_caching (bool): Whether to enable caching for the pipeline.
 
     Returns:
         None
     """
+
     if pipeline_type == "training":
         pipeline = training_pipeline
     elif pipeline_type == "prediction":
