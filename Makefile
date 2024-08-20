@@ -35,7 +35,7 @@ build: ## Build and push container.
 
 compile ?= true
 build ?= true
-enable_caching ?= false
+enable_caching ?= False
 run: ## Run a pipeline. Set pipeline=<training|prediction>. Optionally set compile=<true|false> (default=true), build=<true|false>, enable_caching=<true|false> (default=false).
 	@if [ $(compile) = "true" ]; then \
 		$(MAKE) compile ; \
@@ -49,9 +49,9 @@ run: ## Run a pipeline. Set pipeline=<training|prediction>. Optionally set compi
 		echo "ValueError: build must be either true or false" ; \
 		exit ; \
 	fi && \
-	if [ $(enable_caching) != "true" ] && [ $(enable_caching) != "false" ]; then
-		echo "ValueError: enable_caching must be either true or false" ;
-		exit ;
+	if [ $(enable_caching) != "true" ] && [ $(enable_caching) != "false" ]; then \
+		echo "ValueError: enable_caching must be either true or false" ; \
+		exit ; \
 	fi && \
 	echo "################################################################################" && \
 	echo "# Run $$pipeline pipeline" && \
@@ -117,3 +117,7 @@ undeploy: ## Destroy the infrastructure in your project. Optionally set env=<dev
 	cd terraform/environments/$(env) && \
 	terraform init -input=false -backend-config='bucket=${VERTEX_PROJECT_ID}-tfstate' && \
 	terraform destroy -var 'project_id=${VERTEX_PROJECT_ID}' -var 'region=${VERTEX_LOCATION}' $$AUTO_APPROVE_FLAG
+
+pre-commit: ## Run pre-commit checks for pipelines.
+	@cd pipelines && \
+	poetry run pre-commit run --all-files

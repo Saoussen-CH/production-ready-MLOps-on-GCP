@@ -1,6 +1,6 @@
 from google.cloud import aiplatform
-from os import environ as env
 import argparse
+from os import environ as env
 
 
 def trigger_pipeline(
@@ -21,28 +21,27 @@ def trigger_pipeline(
         aiplatform.pipeline_jobs.PipelineJob: the Vertex PipelineJob object
     """
 
+    # Retrieve environment variables
     project = env.get("VERTEX_PROJECT_ID")
     location = env.get("VERTEX_LOCATION")
     bucket_uri = env.get("VERTEX_PIPELINE_ROOT")
     service_account = env.get("VERTEX_SA_EMAIL")
-    image_name = env.get("IMAGE_NAME")
-    image_tag = env.get("IMAGE_TAG")
 
+    # Set parameters based on pipeline type
     if type == "training":
         parameters = {
             "project": project,
             "location": location,
             "training_job_display_name": f"{display_name}-training-job",
             "base_output_dir": bucket_uri,
-            "image_name": image_name,
-            "image_tag": image_tag,
         }
-
     else:
         parameters = {}
 
+    # Initialize AI Platform
     aiplatform.init(project=project, location=location)
 
+    # Create and run the pipeline job
     start_pipeline = aiplatform.pipeline_jobs.PipelineJob(
         display_name=display_name,
         template_path=template_path,
@@ -52,9 +51,12 @@ def trigger_pipeline(
         location=location,
     )
 
-    start_pipeline.run(service_account=service_account)
-
-    start_pipeline.wait()
+    try:
+        start_pipeline.run(service_account=service_account)
+        start_pipeline.wait()
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        raise
 
     return start_pipeline
 
@@ -65,31 +67,37 @@ if __name__ == "__main__":
         "--template_path",
         help="Path to the compiled pipeline (YAML)",
         type=str,
+        required=True,
     )
     parser.add_argument(
         "--display_name",
         help="Display name for the PipelineJob",
         type=str,
+        required=True,
     )
-
     parser.add_argument(
         "--type",
         help="Type of the pipeline to trigger <training/prediction>",
         type=str,
+        choices=["training", "prediction"],
+        required=True,
     )
-
     parser.add_argument(
         "--enable_caching",
         help="Whether to enable caching for the pipeline",
-        type=bool,
-        default=False,
+        type=str,
+        choices=["true", "false"],
+        default="false",
     )
 
     args = parser.parse_args()
+
+    # Convert "true"/"false" to boolean
+    enable_caching = args.enable_caching.lower() == "true"
 
     trigger_pipeline(
         template_path=args.template_path,
         display_name=args.display_name,
         type=args.type,
-        enable_caching=args.enable_caching,
+        enable_caching=enable_caching,
     )

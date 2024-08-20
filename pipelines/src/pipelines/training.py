@@ -22,7 +22,7 @@ from google.cloud.aiplatform import hyperparameter_tuning as hpt
 from kfp import compiler, dsl
 
 from pipelines.utils.query import generate_query
-
+import logging
 
 bq_source_uri = "bigquery-public-data.chicago_taxi_trips.taxi_trips"
 dataset = "prerocessing"
@@ -59,8 +59,6 @@ def pipeline(
     base_output_dir: str = "",
     training_job_display_name: str = "",
     model_name: str = "taxi-traffic-model",
-    image_name: str = env.get("IMAGE_NAME"),
-    image_tag: str = env.get("IMAGE_TAG"),
 ):
     """
     Training pipeline which:
@@ -88,8 +86,9 @@ def pipeline(
 
     preprocessed_table = "preprocessed_data"
 
-    TRAINING_IMAGE = f"{location}-docker.pkg.dev/{project}/mlops-docker-repo/{image_name}:{image_tag}"  # noqa
+    training_image = env.get("TRAINING_IMAGE")
 
+    logging.info(f"Training image URI: {training_image}")
     # define the workerpool spec for the custom jobs
     # (https://cloud.google.com/vertex-ai/docs/reference/rest/v1/CustomJobSpec)
     WORKER_POOL_SPECS = [
@@ -99,7 +98,7 @@ def pipeline(
             ),
             replica_count=1,
             container_spec=dict(
-                image_uri=TRAINING_IMAGE,
+                image_uri=training_image,
             ),
         )
     ]
