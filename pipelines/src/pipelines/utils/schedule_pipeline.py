@@ -117,6 +117,7 @@ def main():
         pipeline_root=args.pipeline_root,
         display_name=args.display_name,
         schedule_name=args.schedule_name,
+        pipeline_type=args.pipeline_type,
         cron=args.cron,
         enable_caching=args.enable_caching,
     )
