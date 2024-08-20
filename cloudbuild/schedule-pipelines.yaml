@@ -48,8 +48,8 @@ steps:
         echo "################################################################################"
         poetry run python -m src.pipelines.utils.schedule_pipeline \
           --pipeline_type=training \
-          --template_path=https://${_TEST_VERTEX_LOCATION}-kfp.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-pipeline-repo/taxifare-training-pipeline/${_TAG_NAME} \
-          --pipeline_root=gs://${_TEST_VERTEX_PROJECT_ID}-pl-root \ 
+          --template_path=https://${_TEST_VERTEX_LOCATION}-kfp.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-pipeline-repo/taxifare-training-pipeline/${_TRAINING_TAG_NAME} \
+          --pipeline_root=${_TEST_VERTEX_PIPELINE_ROOT} \ 
           --display_name=${_ENV}-training-pipeline \
           --schedule_name=${_ENV}-training-schedule \
           --cron="0 * * * *"
@@ -60,8 +60,8 @@ steps:
         echo "################################################################################"
         poetry run python -m src.pipelines.utils.schedule_pipeline \
           --pipeline_type=prediction \
-          --template_path=https://${_TEST_VERTEX_LOCATION}-kfp.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-pipeline-repo/taxifare-batch-prediction-pipeline/${_TAG_NAME} \
-          --pipeline_root=gs://${_TEST_VERTEX_PROJECT_ID}-pl-root \
+          --template_path=https://${_TEST_VERTEX_LOCATION}-kfp.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-pipeline-repo/taxifare-batch-prediction-pipeline/${_PREDICTION_TAG_NAME} \
+          --pipeline_root=${_TEST_VERTEX_PIPELINE_ROOT} \
           --display_name=${_ENV}-prediction-pipeline \
           --schedule_name=${_ENV}-prediction-schedule \
           --cron="0 0 * * *"
