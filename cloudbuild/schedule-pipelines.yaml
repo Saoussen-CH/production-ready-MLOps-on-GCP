@@ -52,7 +52,7 @@ steps:
           --pipeline_root=gs://${_TEST_VERTEX_PROJECT_ID}/pl-root \
           --display_name=${_ENV}-training-pipeline \
           --schedule_name=${_ENV}-training-schedule \
-          --cron="0 0 0 1 *"
+          --cron="0 * * * *"
 
         # Run schedule_pipeline for prediction
         echo "################################################################################"
