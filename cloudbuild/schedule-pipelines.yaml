@@ -48,7 +48,7 @@ steps:
         echo "################################################################################"
         poetry run python -m src.pipelines.utils.schedule_pipeline \
           --pipeline_type=training \
-          --template_path=https://\${_TEST_VERTEX_LOCATION}-kfp.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-pipeline-repo/taxifare-training-pipeline/${_TAG_NAME} \
+          --template_path=https://${_TEST_VERTEX_LOCATION}-kfp.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-pipeline-repo/taxifare-training-pipeline/${_TAG_NAME} \
           --pipeline_root=gs://${_TEST_VERTEX_PROJECT_ID}/pl-root \
           --display_name=${_ENV}-training-pipeline \
           --schedule_name=${_ENV}-training-schedule \
@@ -66,11 +66,11 @@ steps:
           --display_name=${_ENV}-prediction-pipeline \
           --schedule_name=${_ENV}-prediction-schedule \
           --cron="0 0 * * *"
-
-
     env:
       - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
       - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
+      - BQ_LOCATION=${_TEST_BQ_LOCATION}
+      - VERTEX_PIPELINE_ROOT=${_TEST_VERTEX_PIPELINE_ROOT}
       - VERTEX_SA_EMAIL=${_TEST_VERTEX_SA_EMAIL}
 
 options:
