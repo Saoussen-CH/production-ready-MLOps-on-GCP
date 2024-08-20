@@ -24,9 +24,6 @@ from kfp import compiler, dsl
 from pipelines.utils.query import generate_query
 
 
-TRAINING_IMAGE = f"{VERTEX_LOCATION}-docker.pkg.dev/{VERTEX_PROJECT_ID}/mlops-docker-repo/{IMAGE_NAME}:{IMAGE_TAG}"  # noqa
-
-
 bq_source_uri = "bigquery-public-data.chicago_taxi_trips.taxi_trips"
 dataset = "prerocessing"
 table = "taxi_fare"
