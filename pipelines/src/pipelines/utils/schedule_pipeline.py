@@ -42,7 +42,7 @@ def schedule_pipeline(
         display_name=schedule_name,
         service_account=service_account,
     )
-
+    pipeline_job_schedule.wait()
     print(f"Schedule created: {pipeline_job_schedule}")
 
     return pipeline_job_schedule
