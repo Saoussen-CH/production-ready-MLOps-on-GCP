@@ -23,11 +23,6 @@ from kfp import compiler, dsl
 
 from pipelines.utils.query import generate_query
 
-# custom container
-VERTEX_PROJECT_ID = env.get("VERTEX_PROJECT_ID")
-VERTEX_LOCATION = env.get("VERTEX_LOCATION")
-IMAGE_NAME = env.get("IMAGE_NAME")
-IMAGE_TAG = env.get("IMAGE_TAG")
 
 TRAINING_IMAGE = f"{VERTEX_LOCATION}-docker.pkg.dev/{VERTEX_PROJECT_ID}/mlops-docker-repo/{IMAGE_NAME}:{IMAGE_TAG}"  # noqa
 
@@ -38,20 +33,6 @@ table = "taxi_fare"
 label = "total_fare"
 timestamp = "2022-12-01 00:00:00"
 
-
-# define the workerpool spec for the custom jobs
-# (https://cloud.google.com/vertex-ai/docs/reference/rest/v1/CustomJobSpec)
-WORKER_POOL_SPECS = [
-    dict(
-        machine_spec=dict(
-            machine_type="n1-standard-4",
-        ),
-        replica_count=1,
-        container_spec=dict(
-            image_uri=TRAINING_IMAGE,
-        ),
-    )
-]
 
 # define the metric spec for hyperparameter tuning
 # for details:
@@ -81,6 +62,8 @@ def pipeline(
     base_output_dir: str = "",
     training_job_display_name: str = "",
     model_name: str = "taxi-traffic-model",
+    image_name: str = env.get("IMAGE_NAME"),
+    image_tag: str = env.get("IMAGE_TAG"),
 ):
     """
     Training pipeline which:
@@ -107,6 +90,22 @@ def pipeline(
     queries_folder = pathlib.Path(__file__).parent / "queries"
 
     preprocessed_table = "preprocessed_data"
+
+    TRAINING_IMAGE = f"{location}-docker.pkg.dev/{project}/mlops-docker-repo/{image_name}:{image_tag}"  # noqa
+
+    # define the workerpool spec for the custom jobs
+    # (https://cloud.google.com/vertex-ai/docs/reference/rest/v1/CustomJobSpec)
+    WORKER_POOL_SPECS = [
+        dict(
+            machine_spec=dict(
+                machine_type="n1-standard-4",
+            ),
+            replica_count=1,
+            container_spec=dict(
+                image_uri=TRAINING_IMAGE,
+            ),
+        )
+    ]
 
     prep_query = generate_query(
         input_file=queries_folder / "ingest.sql",
