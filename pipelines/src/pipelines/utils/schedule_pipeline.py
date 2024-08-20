@@ -8,6 +8,7 @@ def schedule_pipeline(
     pipeline_root: str,
     display_name: str,
     schedule_name: str,
+    pipeline_type: str,
     cron: str,
     enable_caching: bool = False,
 ) -> aiplatform.pipeline_job_schedules.PipelineJobSchedule:
@@ -26,14 +27,27 @@ def schedule_pipeline(
     """
     project = env.get("VERTEX_PROJECT_ID")
     location = env.get("VERTEX_LOCATION")
+    bucket_uri = env.get("VERTEX_PIPELINE_ROOT")
     service_account = env.get("VERTEX_SA_EMAIL")
 
     aiplatform.init(project=project, location=location)
+
+    if pipeline_type == "training":
+        parameters = {
+            "project": project,
+            "location": location,
+            "training_job_display_name": f"{display_name}-training-job-on-{schedule_name}",  # noqa
+            "base_output_dir": bucket_uri,
+        }
+
+    else:
+        parameters = {}
 
     pipeline_job = aiplatform.PipelineJob(
         template_path=template_path,
         pipeline_root=pipeline_root,
         display_name=display_name,
+        parameter_values=parameters,
         enable_caching=enable_caching,
     )
 
