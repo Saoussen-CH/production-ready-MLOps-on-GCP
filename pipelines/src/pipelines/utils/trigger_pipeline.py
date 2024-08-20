@@ -25,6 +25,8 @@ def trigger_pipeline(
     location = env.get("VERTEX_LOCATION")
     bucket_uri = env.get("VERTEX_PIPELINE_ROOT")
     service_account = env.get("VERTEX_SA_EMAIL")
+    image_name = env.get("IMAGE_NAME")
+    image_tag = env.get("IMAGE_TAG")
 
     if type == "training":
         parameters = {
@@ -32,6 +34,8 @@ def trigger_pipeline(
             "location": location,
             "training_job_display_name": f"{display_name}-training-job",
             "base_output_dir": bucket_uri,
+            "image_name": image_name,
+            "image_tag": image_tag,
         }
 
     else:
