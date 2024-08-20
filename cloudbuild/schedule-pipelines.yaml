@@ -49,11 +49,11 @@ steps:
         poetry run python -m src.pipelines.utils.schedule_pipeline \
           --pipeline_type=training \
           --template_path=https://${_TEST_VERTEX_LOCATION}-kfp.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-pipeline-repo/taxifare-training-pipeline/${_TRAINING_TAG_NAME} \
-          --pipeline_root=${_TEST_VERTEX_PIPELINE_ROOT} \ 
+          --pipeline_root=${_TEST_VERTEX_PIPELINE_ROOT} \
           --display_name=${_ENV}-training-pipeline \
           --schedule_name=${_ENV}-training-schedule \
           --cron="0 * * * *"
-
+          
         # Run schedule_pipeline for prediction
         echo "################################################################################"
         echo "# Scheduling prediction pipeline..."
