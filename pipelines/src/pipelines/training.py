@@ -22,15 +22,7 @@ from google.cloud.aiplatform import hyperparameter_tuning as hpt
 from kfp import compiler, dsl
 
 from pipelines.utils.query import generate_query
-
-# custom container
-VERTEX_PROJECT_ID = env.get("VERTEX_PROJECT_ID")
-VERTEX_LOCATION = env.get("VERTEX_LOCATION")
-IMAGE_NAME = env.get("IMAGE_NAME")
-IMAGE_TAG = env.get("IMAGE_TAG")
-
-TRAINING_IMAGE = f"{VERTEX_LOCATION}-docker.pkg.dev/{VERTEX_PROJECT_ID}/mlops-docker-repo/{IMAGE_NAME}:{IMAGE_TAG}"  # noqa
-
+import logging
 
 bq_source_uri = "bigquery-public-data.chicago_taxi_trips.taxi_trips"
 dataset = "prerocessing"
@@ -38,20 +30,6 @@ table = "taxi_fare"
 label = "total_fare"
 timestamp = "2022-12-01 00:00:00"
 
-
-# define the workerpool spec for the custom jobs
-# (https://cloud.google.com/vertex-ai/docs/reference/rest/v1/CustomJobSpec)
-WORKER_POOL_SPECS = [
-    dict(
-        machine_spec=dict(
-            machine_type="n1-standard-4",
-        ),
-        replica_count=1,
-        container_spec=dict(
-            image_uri=TRAINING_IMAGE,
-        ),
-    )
-]
 
 # define the metric spec for hyperparameter tuning
 # for details:
@@ -107,6 +85,23 @@ def pipeline(
     queries_folder = pathlib.Path(__file__).parent / "queries"
 
     preprocessed_table = "preprocessed_data"
+
+    training_image = env.get("TRAINING_IMAGE")
+
+    logging.info(f"Training image URI: {training_image}")
+    # define the workerpool spec for the custom jobs
+    # (https://cloud.google.com/vertex-ai/docs/reference/rest/v1/CustomJobSpec)
+    WORKER_POOL_SPECS = [
+        dict(
+            machine_spec=dict(
+                machine_type="n1-standard-4",
+            ),
+            replica_count=1,
+            container_spec=dict(
+                image_uri=training_image,
+            ),
+        )
+    ]
 
     prep_query = generate_query(
         input_file=queries_folder / "ingest.sql",

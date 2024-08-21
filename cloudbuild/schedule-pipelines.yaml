@@ -53,7 +53,7 @@ steps:
           --display_name=${_ENV}-training-pipeline \
           --schedule_name=${_ENV}-training-schedule \
           --cron="0 * * * *"
-          
+
         # Run schedule_pipeline for prediction
         echo "################################################################################"
         echo "# Scheduling prediction pipeline..."
@@ -71,6 +71,8 @@ steps:
       - BQ_LOCATION=${_TEST_BQ_LOCATION}
       - VERTEX_PIPELINE_ROOT=${_TEST_VERTEX_PIPELINE_ROOT}
       - VERTEX_SA_EMAIL=${_TEST_VERTEX_SA_EMAIL}
+      - IMAGE_NAME=${_IMAGE_NAME}
+      - IMAGE_TAG=${_IMAGE_TAG}
 
 options:
   logging: CLOUD_LOGGING_ONLY

@@ -30,6 +30,8 @@ def schedule_pipeline(
     bucket_uri = env.get("VERTEX_PIPELINE_ROOT")
     service_account = env.get("VERTEX_SA_EMAIL")
     bq_location = env.get("BQ_LOCATION")
+    image_name = env.get("IMAGE_NAME")
+    image_tag = env.get("IMAGE_TAG")
 
     aiplatform.init(project=project, location=location)
 
@@ -40,6 +42,8 @@ def schedule_pipeline(
             "training_job_display_name": f"{display_name}-training-job-on-{schedule_name}",  # noqa
             "base_output_dir": bucket_uri,
             "bq_location": bq_location,
+            "image_name": image_name,
+            "image_tag": image_tag,
         }
 
     else:

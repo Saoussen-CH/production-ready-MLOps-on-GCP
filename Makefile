@@ -49,9 +49,9 @@ run: ## Run a pipeline. Set pipeline=<training|prediction>. Optionally set compi
 		echo "ValueError: build must be either true or false" ; \
 		exit ; \
 	fi && \
-	if [ $(enable_caching) != "true" ] && [ $(enable_caching) != "false" ]; then
-		echo "ValueError: enable_caching must be either true or false" ;
-		exit ;
+	if [ $(enable_caching) != "true" ] && [ $(enable_caching) != "false" ]; then \
+		echo "ValueError: enable_caching must be either true or false" ; \
+		exit ; \
 	fi && \
 	echo "################################################################################" && \
 	echo "# Run $$pipeline pipeline" && \
@@ -82,8 +82,12 @@ test-pipelines: ## Run unit tests for pipelines package
 	poetry run pytest utils/test_trigger_pipelines.py &&\
 	poetry run pytest utils/test_upload_pipeline.py
 
-
-e2e-tests: ##Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify enable_caching=<true|false> (defaults to default Vertex caching behaviour).
+enable_caching ?= false
+e2e-tests: ## Perform end-to-end (E2E) pipeline tests. Must specify pipeline=<training|prediction>. Optionally specify enable_caching=<true|false> (defaults to default Vertex caching behaviour).
+	@if [ $(enable_caching) != "true" ] && [ $(enable_caching) != "false" ]; then \
+		echo "ValueError: enable_caching must be either true or false" ; \
+		exit ; \
+	fi && \
 	cd pipelines && \
 	poetry run pytest tests/test_e2e.py --pipeline_type=${pipeline} --enable_caching=$(enable_caching)
 
@@ -117,3 +121,7 @@ undeploy: ## Destroy the infrastructure in your project. Optionally set env=<dev
 	cd terraform/environments/$(env) && \
 	terraform init -input=false -backend-config='bucket=${VERTEX_PROJECT_ID}-tfstate' && \
 	terraform destroy -var 'project_id=${VERTEX_PROJECT_ID}' -var 'region=${VERTEX_LOCATION}' $$AUTO_APPROVE_FLAG
+
+pre-commit: ## Run pre-commit checks for pipelines.
+	@cd pipelines && \
+	poetry run pre-commit run --all-files

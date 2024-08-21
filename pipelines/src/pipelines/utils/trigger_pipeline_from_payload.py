@@ -7,18 +7,13 @@ from pipelines.utils.trigger_pipeline import trigger_pipeline
 def trigger_pipeline_from_payload(
     payload: dict, type: str, enable_caching: bool
 ) -> aiplatform.PipelineJob:
-    """Triggers a pipeline run from a payload dict, JSON pipeline definition,
-    and env variables.
-    Args:
-        payload (dict): payload containing attributes and data.
-        template_path (str): File path (local or GCS) of compiled pipeline definition.
-    """
-    logging.info("Received payload: %s with job type: %s", payload, type)
-    payload = convert_payload(payload)
+    logging.info(f"Triggering pipeline with caching: {enable_caching}")
+    template_path = payload["attributes"]["template_path"]
+    display_name = f"e2e-test-{type}-pipeline"
 
     return trigger_pipeline(
-        template_path=payload["attributes"]["template_path"],
-        display_name="test_trigger_pipeline",
+        template_path=template_path,
+        display_name=display_name,
         type=type,
         enable_caching=enable_caching,
     )

@@ -23,6 +23,7 @@ steps:
       curl -sSL https://install.python-poetry.org | python3 - &&
       export PATH="/builder/home/.local/bin:$$PATH" &&
       make install &&
+      export TRAINING_IMAGE=${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-docker-repo/${_IMAGE_NAME}:${COMMIT_SHA} && \
       make e2e-tests pipeline=training enable_caching=${_TEST_ENABLE_PIPELINE_CACHING} && \
       make e2e-tests pipeline=prediction enable_caching=${_TEST_ENABLE_PIPELINE_CACHING}
   env:

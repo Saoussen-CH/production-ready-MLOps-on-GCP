@@ -4,7 +4,8 @@ from pipelines.utils.trigger_pipeline import trigger_pipeline
 
 
 @pytest.mark.parametrize("enable_caching", [True, False])
-def test_trigger_pipeline(mocker, enable_caching):
+@pytest.mark.parametrize("pipeline_type", ["training", "prediction"])
+def test_trigger_pipeline(mocker, enable_caching, pipeline_type):
     # Set up mock objects
     mock_pipeline_job = mocker.patch(
         "google.cloud.aiplatform.pipeline_jobs.PipelineJob"
@@ -25,7 +26,6 @@ def test_trigger_pipeline(mocker, enable_caching):
     # Call the function with test arguments
     template_path = "gs://test-bucket/pipeline.yaml"
     display_name = "test-pipeline"
-    pipeline_type = "training"
     result = trigger_pipeline(
         template_path, display_name, pipeline_type, enable_caching
     )
@@ -37,12 +37,16 @@ def test_trigger_pipeline(mocker, enable_caching):
     mock_init.assert_called_once_with(project="test-project", location="us-central1")
 
     # Assert that PipelineJob was called with the correct arguments
-    expected_params = {
-        "project": "test-project",
-        "location": "us-central1",
-        "training_job_display_name": "test-pipeline-training-job",
-        "base_output_dir": "gs://test-bucket",
-    }
+    if pipeline_type == "training":
+        expected_params = {
+            "project": "test-project",
+            "location": "us-central1",
+            "training_job_display_name": "test-pipeline-training-job",
+            "base_output_dir": "gs://test-bucket",
+        }
+    else:
+        expected_params = {}
+
     mock_pipeline_job.assert_called_once_with(
         display_name="test-pipeline",
         template_path="gs://test-bucket/pipeline.yaml",
