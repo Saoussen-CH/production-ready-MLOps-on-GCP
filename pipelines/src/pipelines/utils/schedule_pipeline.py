@@ -1,6 +1,7 @@
 import argparse
 from google.cloud import aiplatform
 from os import environ as env
+import logging
 
 
 def schedule_pipeline(
@@ -58,8 +59,7 @@ def schedule_pipeline(
         display_name=schedule_name,
         service_account=service_account,
     )
-    pipeline_job_schedule.wait()
-    print(f"Schedule created: {pipeline_job_schedule}")
+    logging.info(f"Schedule created: {pipeline_job_schedule}")
 
     return pipeline_job_schedule
 
