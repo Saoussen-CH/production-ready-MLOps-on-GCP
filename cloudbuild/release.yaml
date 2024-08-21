@@ -24,6 +24,7 @@ steps:
         make install && \
         for proj in ${_DESTINATION_PROJECTS} ; do \
           export CONTAINER_IMAGE_AR=${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/mlops-docker-repo && \
+          export TRAINING_IMAGE=${_VERTEX_LOCATION}-docker.pkg.dev/$$proj/mlops-docker-repo/${_IMAGE_NAME}:${TAG_NAME} && \
           export KFP_TEMPLATE_AR=https://${_VERTEX_LOCATION}-kfp.pkg.dev/$$proj/mlops-pipeline-repo && \
           ( \
             make compile pipeline=training && \
