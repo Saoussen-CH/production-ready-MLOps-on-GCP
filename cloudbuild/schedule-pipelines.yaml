@@ -65,6 +65,12 @@ steps:
         echo "################################################################################"
         make install
 
+        # Navigate to the source directory
+        echo "################################################################################"
+        echo "# Changing directory to pipelines..."
+        echo "################################################################################"
+        cd pipelines && \
+
         # Run schedule_pipeline for prediction
         echo "################################################################################"
         echo "# Scheduling prediction pipeline..."
