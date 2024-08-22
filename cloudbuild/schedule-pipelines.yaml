@@ -81,7 +81,7 @@ steps:
           --pipeline_root=${_TEST_VERTEX_PIPELINE_ROOT} \
           --display_name=${_ENV}-prediction-pipeline \
           --schedule_name=${_ENV}-prediction-schedule \
-          --cron="0 0 * * *"
+          --cron="0 * * * *"
     env:
       - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
       - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
