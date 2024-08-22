@@ -1,5 +1,3 @@
-
-
 -- Create dataset if it doesn't exist
 CREATE SCHEMA IF NOT EXISTS `{{ dataset }}`
   OPTIONS (
@@ -9,24 +7,27 @@ CREATE SCHEMA IF NOT EXISTS `{{ dataset }}`
 -- Create (or replace) table with preprocessed data
 DROP TABLE IF EXISTS `{{ dataset }}.{{ table_ }}`;
 CREATE TABLE `{{ dataset }}.{{ table_ }}` AS (
-WITH start_timestamps AS (
-SELECT
-	IF('{{ start_timestamp }}' = '',
-	CURRENT_DATETIME(),
-	CAST('{{ start_timestamp }}' AS DATETIME)) AS start_timestamp
+-- Determine the latest available data date if use_latest_data is True
+WITH latest_data_date AS (
+    {% if use_latest_data %}
+    SELECT MAX(DATE(trip_start_timestamp)) AS max_date
+    FROM `{{ source }}`
+    {% else %}
+    SELECT DATE('{{ start_timestamp }}') AS max_date
+    {% endif %}
 )
--- Ingest data between 2 and 3 months ago
-,filtered_data AS (
+-- Ingest data between 2 and 3 months ago from the latest available data date
+, filtered_data AS (
     SELECT
     *
-    FROM `{{ source }}`, start_timestamps
+    FROM `{{ source }}`, latest_data_date
     WHERE
          DATE(trip_start_timestamp) BETWEEN
-         DATE_SUB(DATE(CAST(start_timestamps.start_timestamp AS DATETIME)), INTERVAL 3 MONTH) AND
-         DATE_SUB(DATE(start_timestamp), INTERVAL 2 MONTH)
+         DATE_SUB(latest_data_date.max_date, INTERVAL 3 MONTH) AND
+         DATE_SUB(latest_data_date.max_date, INTERVAL 2 MONTH)
 )
 -- Use the average trip_seconds as a replacement for NULL or 0 values
-,mean_time AS (
+, mean_time AS (
     SELECT CAST(avg(trip_seconds) AS INT64) as avg_trip_seconds
     FROM filtered_data
 )
@@ -38,10 +39,10 @@ SELECT
         ST_GEOGPOINT(pickup_longitude, pickup_latitude),
         ST_GEOGPOINT(dropoff_longitude, dropoff_latitude)) AS trip_distance,
     trip_miles,
-    CAST( CASE WHEN trip_seconds is NULL then m.avg_trip_seconds
-               WHEN trip_seconds <= 0 then m.avg_trip_seconds
-               ELSE trip_seconds
-               END AS FLOAT64) AS trip_seconds,
+    CAST(CASE WHEN trip_seconds IS NULL THEN m.avg_trip_seconds
+              WHEN trip_seconds <= 0 THEN m.avg_trip_seconds
+              ELSE trip_seconds
+              END AS FLOAT64) AS trip_seconds,
     payment_type,
     company,
     {% if label %}

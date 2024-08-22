@@ -12,6 +12,8 @@ def schedule_pipeline(
     pipeline_type: str,
     cron: str,
     enable_caching: bool = False,
+    use_latest_data: bool = True,
+    timestamp: str = "",
 ) -> aiplatform.pipeline_job_schedules.PipelineJobSchedule:
     """
     Schedule a Vertex AI pipeline run based on the provided configuration.
@@ -21,7 +23,11 @@ def schedule_pipeline(
         pipeline_root (str): The root path for pipeline artifacts (Cloud Storage URI).
         display_name (str): The display name for the pipeline.
         schedule_name (str): The name of the schedule.
+        pipeline_type (str): The type of pipeline (training or prediction).
         cron (str): Cron expression for scheduling the pipeline run.
+        enable_caching (bool): Whether to enable caching for the pipeline run.
+        use_latest_data (bool): Whether to use the latest data or a fixed timestamp.
+        timestamp (str): The timestamp for the pipeline in ISO 8601 format.
 
     Returns:
         pipeline_job_schedules.PipelineJobSchedule: The scheduled pipeline job.
@@ -42,19 +48,21 @@ def schedule_pipeline(
         "project": project,
         "location": location,
         "bq_location": bq_location,
+        "use_latest_data": use_latest_data,
+        "timestamp": timestamp,
     }
 
-    if type == "training":
+    if pipeline_type == "training":
         parameters.update(
             {
                 "training_job_display_name": f"{display_name}-training-job",
                 "base_output_dir": bucket_uri,
             }
         )
-    elif type == "prediction":
+    elif pipeline_type == "prediction":
         pass  # No additional parameters for prediction
     else:
-        raise ValueError(f"Unsupported pipeline type: {type}")
+        raise ValueError(f"Unsupported pipeline type: {pipeline_type}")
 
     pipeline_job = aiplatform.PipelineJob(
         template_path=template_path,
@@ -104,16 +112,27 @@ def main():
         required=True,
         help="Name for the schedule.",
     )
+
     parser.add_argument(
         "--cron",
         required=True,
         help="Cron expression for scheduling.",
     )
-
     parser.add_argument(
         "--enable_caching",
         action="store_true",
         help="Enable caching for the pipeline run.",
+    )
+    parser.add_argument(
+        "--use_latest_data",
+        action="store_true",
+        help="Use the latest data for the pipeline run.",
+    )
+    parser.add_argument(
+        "--timestamp",
+        type=str,
+        default="",
+        help="Specify the timestamp for the pipeline in ISO 8601 format.",
     )
 
     args = parser.parse_args()
@@ -126,6 +145,8 @@ def main():
         pipeline_type=args.pipeline_type,
         cron=args.cron,
         enable_caching=args.enable_caching,
+        use_latest_data=args.use_latest_data,
+        timestamp=args.timestamp,
     )
 
 

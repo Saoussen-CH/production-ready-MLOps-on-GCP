@@ -1,4 +1,5 @@
 import pathlib
+import logging
 
 from components import (
     extract_table_to_gcs_op,
@@ -22,7 +23,6 @@ from google.cloud.aiplatform import hyperparameter_tuning as hpt
 from kfp import compiler, dsl
 
 from pipelines.utils.query import generate_query
-import logging
 
 bq_source_uri = "bigquery-public-data.chicago_taxi_trips.taxi_trips"
 dataset = "prerocessing"
@@ -55,7 +55,8 @@ def pipeline(
     bq_location: str = env.get("BQ_LOCATION"),
     bq_source_uri: str = "bigquery-public-data.chicago_taxi_trips.taxi_trips",
     dataset: str = "taxi_trips_dataset",
-    timestamp: str = "2022-12-01 00:00:00",
+    timestamp: str = "2022-12-01 00:00:00",  # Optional timestamp parameter
+    use_latest_data: bool = True,  # Parameter to use the latest data or fixed timestamp
     base_output_dir: str = "",
     training_job_display_name: str = "",
     model_name: str = "taxi-traffic-model",
@@ -79,7 +80,10 @@ def pipeline(
         timestamp (str): Optional. Empty or a specific timestamp in ISO 8601 format
             (YYYY-MM-DDThh:mm:ss.sss±hh:mm or YYYY-MM-DDThh:mm:ss).
             If any time part is missing, it will be regarded as zero.
-        test_data_gcs_uri (str): Optional. GCS URI of static held-out test dataset.
+        use_latest_data (bool): Whether to use the latest available data
+        base_output_dir (str): base output directory for the training job
+        training_job_display_name (str): display name for the training job
+        model_name (str): name of the model
     """
     PRIMARY_METRIC = "rootMeanSquaredError"
     queries_folder = pathlib.Path(__file__).parent / "queries"
@@ -103,6 +107,7 @@ def pipeline(
         )
     ]
 
+    # Generate the preprocessing query
     prep_query = generate_query(
         input_file=queries_folder / "ingest.sql",
         source=bq_source_uri,
@@ -111,6 +116,7 @@ def pipeline(
         table_=preprocessed_table,
         label=label,
         start_timestamp=timestamp,
+        use_latest_data=use_latest_data,
     )
 
     prep_op = BigqueryQueryJobOp(

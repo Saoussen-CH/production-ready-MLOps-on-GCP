@@ -145,6 +145,8 @@ def pipeline_e2e_test(
     pipeline_type: str,
     common_tasks: dict,
     enable_caching: bool = False,
+    timestamp: str = "",
+    use_latest_data: bool = True,
     **kwargs: dict,
 ):
     """
@@ -156,6 +158,8 @@ def pipeline_e2e_test(
         pipeline_func (Callable): KFP pipeline function to test
         enable_caching (bool): enable pipeline caching
         common_tasks (dict): tasks in pipline that are executed everytime
+        timestamp (str): Optional. Empty or a specific timestamp in ISO 8601 format.
+        use_latest_data (bool): Whether to use the latest available data.
         **kwargs (dict): conditional tasks groups in dictionary
     """
 
@@ -167,7 +171,13 @@ def pipeline_e2e_test(
         type_check=False,
     )
 
-    payload = {"attributes": {"template_path": pipeline_yaml}}
+    payload = {
+        "attributes": {"template_path": pipeline_yaml},
+        "data": {
+            "timestamp": timestamp,
+            "use_latest_data": use_latest_data,
+        },
+    }
 
     try:
         logging.info("Triggering pipeline with payload: %s", payload)
@@ -206,7 +216,7 @@ def pipeline_e2e_test(
 def test_pipeline_tasks(tasks: list, expected_tasks: dict, allow_tasks_missing: bool):
     """
     Test if expected_task meets all the requirements:
-    1. if expected tasks occured in the pipeline
+    1. if expected tasks occurred in the pipeline
     2. if these tasks output the correct artifacts
 
     Args:
@@ -252,14 +262,14 @@ def test_pipeline_tasks(tasks: list, expected_tasks: dict, allow_tasks_missing: 
         ]
         assert len(missing_tasks) == 0, f"expected but missing tasks: {missing_tasks}"
 
-    # test functions mappiing
+    # test functions mapping
     test_functions = {
         "models": test_vertex_model_uri,
         "endpoints": test_vertex_endpoint_uri,
         "batchPredictionJobs": test_batch_prediction_job_uri,
     }
 
-    # initialise GCS client for the project
+    # initialize GCS client for the project
     storage_client = storage.Client(project=project_id)
 
     # 2. Outputs check
