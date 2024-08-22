@@ -44,17 +44,17 @@ def schedule_pipeline(
         "bq_location": bq_location,
     }
 
-    if type == "training":
+    if pipeline_type == "training":
         parameters.update(
             {
                 "training_job_display_name": f"{display_name}-training-job",
                 "base_output_dir": bucket_uri,
             }
         )
-    elif type == "prediction":
+    elif pipeline_type == "prediction":
         pass  # No additional parameters for prediction
     else:
-        raise ValueError(f"Unsupported pipeline type: {type}")
+        raise ValueError(f"Unsupported pipeline type: {pipeline_type}")
 
     pipeline_job = aiplatform.PipelineJob(
         template_path=template_path,
