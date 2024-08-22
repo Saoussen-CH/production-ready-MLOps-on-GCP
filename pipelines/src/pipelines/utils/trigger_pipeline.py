@@ -22,23 +22,34 @@ def trigger_pipeline(
     Returns:
         aiplatform.pipeline_jobs.PipelineJob: the Vertex PipelineJob object
     """
+
     logging.info(f"Enable Caching in Trigger: {enable_caching}")
+
     # Retrieve environment variables
     project = env.get("VERTEX_PROJECT_ID")
     location = env.get("VERTEX_LOCATION")
     bucket_uri = env.get("VERTEX_PIPELINE_ROOT")
     service_account = env.get("VERTEX_SA_EMAIL")
+    bq_location = env.get("BQ_LOCATION")
+
+    # Validate environment variables
+    if not all([project, location, bucket_uri, service_account, bq_location]):
+        raise ValueError("One or more required environment variables are missing.")
 
     # Set parameters based on pipeline type
+    parameters = {"project": project, "location": location, "bq_location": bq_location}
+
     if type == "training":
-        parameters = {
-            "project": project,
-            "location": location,
-            "training_job_display_name": f"{display_name}-training-job",
-            "base_output_dir": bucket_uri,
-        }
+        parameters.update(
+            {
+                "training_job_display_name": f"{display_name}-training-job",
+                "base_output_dir": bucket_uri,
+            }
+        )
+    elif type == "prediction":
+        pass  # No additional parameters for prediction
     else:
-        parameters = {}
+        raise ValueError(f"Unsupported pipeline type: {type}")
 
     # Initialize AI Platform
     aiplatform.init(project=project, location=location)
@@ -57,7 +68,7 @@ def trigger_pipeline(
         start_pipeline.run(service_account=service_account)
         start_pipeline.wait()
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logging.error(f"An error occurred: {e}")
         raise
 
     return start_pipeline
