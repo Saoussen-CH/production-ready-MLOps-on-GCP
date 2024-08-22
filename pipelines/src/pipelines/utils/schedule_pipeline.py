@@ -26,25 +26,35 @@ def schedule_pipeline(
     Returns:
         pipeline_job_schedules.PipelineJobSchedule: The scheduled pipeline job.
     """
+    # Retrieve environment variables
     project = env.get("VERTEX_PROJECT_ID")
     location = env.get("VERTEX_LOCATION")
     bucket_uri = env.get("VERTEX_PIPELINE_ROOT")
     service_account = env.get("VERTEX_SA_EMAIL")
     bq_location = env.get("BQ_LOCATION")
 
-    aiplatform.init(project=project, location=location)
+    # Validate environment variables
+    if not all([project, location, bucket_uri, service_account, bq_location]):
+        raise ValueError("One or more required environment variables are missing.")
 
-    if pipeline_type == "training":
-        parameters = {
-            "project": project,
-            "location": location,
-            "training_job_display_name": f"{display_name}-training-job-on-{schedule_name}",  # noqa
-            "base_output_dir": bucket_uri,
-            "bq_location": bq_location,
-        }
+    # Set parameters based on pipeline type
+    parameters = {
+        "project": project,
+        "location": location,
+        "bq_location": bq_location,
+    }
 
+    if type == "training":
+        parameters.update(
+            {
+                "training_job_display_name": f"{display_name}-training-job",
+                "base_output_dir": bucket_uri,
+            }
+        )
+    elif type == "prediction":
+        pass  # No additional parameters for prediction
     else:
-        parameters = {}
+        raise ValueError(f"Unsupported pipeline type: {type}")
 
     pipeline_job = aiplatform.PipelineJob(
         template_path=template_path,
