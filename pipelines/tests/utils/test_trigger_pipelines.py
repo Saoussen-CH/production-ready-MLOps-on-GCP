@@ -22,6 +22,7 @@ def test_trigger_pipeline(mocker, enable_caching, pipeline_type):
     os.environ["VERTEX_LOCATION"] = "us-central1"
     os.environ["VERTEX_PIPELINE_ROOT"] = "gs://test-bucket"
     os.environ["VERTEX_SA_EMAIL"] = "test-service-account@example.com"
+    os.environ["BQ_LOCATION"] = "US"  # Add this line
 
     # Call the function with test arguments
     template_path = "gs://test-bucket/pipeline.yaml"
@@ -37,15 +38,19 @@ def test_trigger_pipeline(mocker, enable_caching, pipeline_type):
     mock_init.assert_called_once_with(project="test-project", location="us-central1")
 
     # Assert that PipelineJob was called with the correct arguments
+    expected_params = {
+        "project": "test-project",
+        "location": "us-central1",
+        "bq_location": "US",  # Include bq_location
+    }
+
     if pipeline_type == "training":
-        expected_params = {
-            "project": "test-project",
-            "location": "us-central1",
-            "training_job_display_name": "test-pipeline-training-job",
-            "base_output_dir": "gs://test-bucket",
-        }
-    else:
-        expected_params = {}
+        expected_params.update(
+            {
+                "training_job_display_name": "test-pipeline-training-job",
+                "base_output_dir": "gs://test-bucket",
+            }
+        )
 
     mock_pipeline_job.assert_called_once_with(
         display_name="test-pipeline",
