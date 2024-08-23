@@ -148,6 +148,10 @@ def main():
     enable_caching = args.enable_caching.lower() == "true"
     use_latest_data = args.use_latest_data.lower() == "true"
 
+    # Log the arguments for debugging
+    logging.info(f"enable_caching: {enable_caching}")
+    logging.info(f"use_latest_data: {use_latest_data}")
+    
     schedule_pipeline(
         template_path=args.template_path,
         pipeline_root=args.pipeline_root,
