@@ -1,41 +1,43 @@
 steps:
-- id: build-training-image
-  name: 'gcr.io/cloud-builders/docker'
-  dir: 'model'
-  args: ['build', '-t', '${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-docker-repo/${_IMAGE_NAME}:${COMMIT_SHA}', '.']
-  waitFor: ['-']
+  # Build the training image
+  - id: build-training-image
+    name: 'gcr.io/cloud-builders/docker'
+    dir: 'model'
+    args: ['build', '-t', '${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-docker-repo/${_IMAGE_NAME}:${COMMIT_SHA}', '.']
+    waitFor: ['-']
 
-- id: push-training-image
-  name: 'gcr.io/cloud-builders/docker'
-  dir: 'model'
-  args: ['push', '${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-docker-repo/${_IMAGE_NAME}:${COMMIT_SHA}']
-  waitFor:
-    - build-training-image
+  # Push the training image to the container registry
+  - id: push-training-image
+    name: 'gcr.io/cloud-builders/docker'
+    dir: 'model'
+    args: ['push', '${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-docker-repo/${_IMAGE_NAME}:${COMMIT_SHA}']
+    waitFor:
+      - build-training-image
 
-# Install Python deps
-# Run end-to-end (E2E) pipeline tests on both pipelines
-- id: e2e-tests
-  name: python:3.10.14
-  entrypoint: /bin/sh
-  args:
-    - -c
-    - |
-      curl -sSL https://install.python-poetry.org | python3 - &&
-      export PATH="/builder/home/.local/bin:$$PATH" &&
-      make install &&
-      export TRAINING_IMAGE=${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-docker-repo/${_IMAGE_NAME}:${COMMIT_SHA} && \
-      make e2e-tests pipeline=training enable_caching=${_TEST_ENABLE_PIPELINE_CACHING} && \
-      make e2e-tests pipeline=prediction enable_caching=${_TEST_ENABLE_PIPELINE_CACHING}
-  env:
-    - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
-    - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
-    - BQ_LOCATION=${_TEST_BQ_LOCATION}
-    - VERTEX_PIPELINE_ROOT=${_TEST_VERTEX_PIPELINE_ROOT}
-    - VERTEX_SA_EMAIL=${_TEST_VERTEX_SA_EMAIL}
-    - IMAGE_NAME=${_IMAGE_NAME}
-    - IMAGE_TAG=${COMMIT_SHA}
-  waitFor:
-    - push-training-image
+  # Install Python dependencies and run end-to-end (E2E) pipeline tests on both pipelines
+  - id: e2e-tests
+    name: python:3.10.14
+    entrypoint: /bin/sh
+    args:
+      - -c
+      - |
+        curl -sSL https://install.python-poetry.org | python3 - &&
+        export PATH="/builder/home/.local/bin:$$PATH" &&
+        make install &&
+        export TRAINING_IMAGE=${_TEST_VERTEX_LOCATION}-docker.pkg.dev/${_TEST_VERTEX_PROJECT_ID}/mlops-docker-repo/${_IMAGE_NAME}:${COMMIT_SHA} && \
+        make e2e-tests pipeline=training enable_caching=${_TEST_ENABLE_PIPELINE_CACHING} use_latest_data=${_TEST_USE_LATEST_DATA} && \
+        make e2e-tests pipeline=prediction enable_caching=${_TEST_ENABLE_PIPELINE_CACHING} use_latest_data=${_TEST_USE_LATEST_DATA}
+    env:
+      - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
+      - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
+      - BQ_LOCATION=${_TEST_BQ_LOCATION}
+      - VERTEX_PIPELINE_ROOT=${_TEST_VERTEX_PIPELINE_ROOT}
+      - VERTEX_SA_EMAIL=${_TEST_VERTEX_SA_EMAIL}
+      - IMAGE_NAME=${_IMAGE_NAME}
+      - IMAGE_TAG=${COMMIT_SHA}
+      - USE_LATEST_DATA=${_TEST_USE_LATEST_DATA}  # Add this line to pass the use_latest_data parameter
+    waitFor:
+      - push-training-image
 
 options:
   logging: CLOUD_LOGGING_ONLY

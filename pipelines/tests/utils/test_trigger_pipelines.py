@@ -5,7 +5,8 @@ from pipelines.utils.trigger_pipeline import trigger_pipeline
 
 @pytest.mark.parametrize("enable_caching", [True, False])
 @pytest.mark.parametrize("pipeline_type", ["training", "prediction"])
-def test_trigger_pipeline(mocker, enable_caching, pipeline_type):
+@pytest.mark.parametrize("use_latest_data", [True, False])
+def test_trigger_pipeline(mocker, enable_caching, pipeline_type, use_latest_data):
     # Set up mock objects
     mock_pipeline_job = mocker.patch(
         "google.cloud.aiplatform.pipeline_jobs.PipelineJob"
@@ -22,13 +23,19 @@ def test_trigger_pipeline(mocker, enable_caching, pipeline_type):
     os.environ["VERTEX_LOCATION"] = "us-central1"
     os.environ["VERTEX_PIPELINE_ROOT"] = "gs://test-bucket"
     os.environ["VERTEX_SA_EMAIL"] = "test-service-account@example.com"
-    os.environ["BQ_LOCATION"] = "US"  # Add this line
+    os.environ["BQ_LOCATION"] = "US"
 
     # Call the function with test arguments
     template_path = "gs://test-bucket/pipeline.yaml"
     display_name = "test-pipeline"
+    timestamp = "2022-12-01 00:00:00"
     result = trigger_pipeline(
-        template_path, display_name, pipeline_type, enable_caching
+        template_path,
+        display_name,
+        pipeline_type,
+        enable_caching,
+        timestamp,
+        use_latest_data,
     )
 
     # Assert that the function returned the expected object
@@ -41,7 +48,9 @@ def test_trigger_pipeline(mocker, enable_caching, pipeline_type):
     expected_params = {
         "project": "test-project",
         "location": "us-central1",
-        "bq_location": "US",  # Include bq_location
+        "bq_location": "US",
+        "timestamp": timestamp,
+        "use_latest_data": use_latest_data,
     }
 
     if pipeline_type == "training":

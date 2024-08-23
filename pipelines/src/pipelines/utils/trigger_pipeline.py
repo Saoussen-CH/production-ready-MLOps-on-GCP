@@ -10,6 +10,8 @@ def trigger_pipeline(
     display_name: str,
     type: str,
     enable_caching: bool = False,
+    timestamp: str = "2022-12-01 00:00:00",
+    use_latest_data: bool = True,
 ) -> aiplatform.pipeline_jobs.PipelineJob:
     """Trigger a Vertex Pipeline run from a (local) compiled pipeline definition.
 
@@ -18,12 +20,17 @@ def trigger_pipeline(
         display_name (str): Display name to use for the PipelineJob
         type (str): Type of the pipeline to trigger <training/prediction>
         enable_caching (bool): Whether to enable caching for the pipeline
-
+        timestamp (str): Optional. Empty or a specific timestamp in ISO 8601 format
+            (YYYY-MM-DDThh:mm:ss.sss±hh:mm or YYYY-MM-DDThh:mm:ss).
+            If any time part is missing, it will be regarded as zero
+        use_latest_data (bool): Whether to use the latest available data
     Returns:
         aiplatform.pipeline_jobs.PipelineJob: the Vertex PipelineJob object
     """
 
     logging.info(f"Enable Caching in Trigger: {enable_caching}")
+    logging.info(f"Enable use_latest_data: {use_latest_data}")
+    logging.info(f"Enable use_latest_data: {timestamp}")
 
     # Retrieve environment variables
     project = env.get("VERTEX_PROJECT_ID")
@@ -37,7 +44,13 @@ def trigger_pipeline(
         raise ValueError("One or more required environment variables are missing.")
 
     # Set parameters based on pipeline type
-    parameters = {"project": project, "location": location, "bq_location": bq_location}
+    parameters = {
+        "project": project,
+        "location": location,
+        "bq_location": bq_location,
+        "timestamp": timestamp,
+        "use_latest_data": use_latest_data,
+    }
 
     if type == "training":
         parameters.update(
@@ -102,15 +115,31 @@ if __name__ == "__main__":
         choices=["true", "false"],
         default="false",
     )
+    parser.add_argument(
+        "--timestamp",
+        help="Optional. Empty or a specific timestamp in ISO 8601 format",
+        type=str,
+        default="",
+    )
+    parser.add_argument(
+        "--use_latest_data",
+        help="Whether to use the latest available data or the fixed timestamp",
+        type=str,
+        choices=["true", "false"],
+        default="true",
+    )
 
     args = parser.parse_args()
 
     # Convert "true"/"false" to boolean
     enable_caching = args.enable_caching.lower() == "true"
+    use_latest_data = args.use_latest_data.lower() == "true"
 
     trigger_pipeline(
         template_path=args.template_path,
         display_name=args.display_name,
         type=args.type,
         enable_caching=enable_caching,
+        timestamp=args.timestamp,
+        use_latest_data=use_latest_data,
     )

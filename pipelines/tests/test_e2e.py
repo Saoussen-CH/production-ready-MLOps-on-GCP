@@ -8,10 +8,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# @pytest.mark.parametrize("pipeline_type", ["training", "prediction"])
-# @pytest.mark.parametrize("enable_caching", [True, False])
-def test_pipeline_run(pipeline_type: str, enable_caching: bool) -> None:
-    logger.info(f"Pipeline Type: {pipeline_type}, Enable Caching: {enable_caching}")
+def test_pipeline_run(
+    pipeline_type: str, enable_caching: bool, timestamp: str, use_latest_data: bool
+) -> None:
     """
     Tests if pipeline is run successfully.
     Triggers pipeline synchronously.
@@ -22,6 +21,8 @@ def test_pipeline_run(pipeline_type: str, enable_caching: bool) -> None:
     Arguments:
         pipeline_type (str): The type of pipeline to run ('training' or 'prediction').
         enable_caching (bool): Whether to enable caching for the pipeline.
+        timestamp (str): Optional. Empty or a specific timestamp in ISO 8601 format.
+        use_latest_data (bool): Whether to use the latest available data.
 
     Returns:
         None
@@ -43,6 +44,8 @@ def test_pipeline_run(pipeline_type: str, enable_caching: bool) -> None:
             pipeline_type=pipeline_type,
             common_tasks={},
             enable_caching=enable_caching,
+            timestamp=timestamp,
+            use_latest_data=use_latest_data,
         )
         logger.info(f"{pipeline} pipeline ran successfully.")
     except Exception as e:
