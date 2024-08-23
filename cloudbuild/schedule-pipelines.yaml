@@ -36,13 +36,19 @@ steps:
           --pipeline_root=${_TEST_VERTEX_PIPELINE_ROOT} \
           --display_name=${_ENV}-training-pipeline \
           --schedule_name=${_ENV}-training-schedule \
-          --cron="0 * * * *"
+          --cron="0 * * * *" \
+          --enable_caching=${_TEST_ENABLE_PIPELINE_CACHING} \
+          --use_latest_data=${_TEST_USE_LATEST_DATA} \
+          --timestamp=${_TEST_TIMESTAMP}
     env:
       - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
       - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
       - BQ_LOCATION=${_TEST_BQ_LOCATION}
       - VERTEX_PIPELINE_ROOT=${_TEST_VERTEX_PIPELINE_ROOT}
       - VERTEX_SA_EMAIL=${_TEST_VERTEX_SA_EMAIL}
+      - ENABLE_CACHING=${_TEST_ENABLE_PIPELINE_CACHING}
+      - USE_LATEST_DATA=${_TEST_USE_LATEST_DATA}
+      - TIMESTAMP=${_TEST_TIMESTAMP}
 
   # Step to schedule the prediction pipeline
   - id: schedule-prediction-pipeline
@@ -81,13 +87,19 @@ steps:
           --pipeline_root=${_TEST_VERTEX_PIPELINE_ROOT} \
           --display_name=${_ENV}-prediction-pipeline \
           --schedule_name=${_ENV}-prediction-schedule \
-          --cron="0 0 * * *"
+          --cron="0 0 * * *" \
+          --enable_caching=${_TEST_ENABLE_PIPELINE_CACHING} \
+          --use_latest_data=${_TEST_USE_LATEST_DATA} \
+          --timestamp=${_TEST_TIMESTAMP}
     env:
       - VERTEX_LOCATION=${_TEST_VERTEX_LOCATION}
       - VERTEX_PROJECT_ID=${_TEST_VERTEX_PROJECT_ID}
       - BQ_LOCATION=${_TEST_BQ_LOCATION}
       - VERTEX_PIPELINE_ROOT=${_TEST_VERTEX_PIPELINE_ROOT}
       - VERTEX_SA_EMAIL=${_TEST_VERTEX_SA_EMAIL}
+      - ENABLE_CACHING=${_TEST_ENABLE_PIPELINE_CACHING}
+      - USE_LATEST_DATA=${_TEST_USE_LATEST_DATA}
+      - TIMESTAMP=${_TEST_TIMESTAMP}
 
 options:
   logging: CLOUD_LOGGING_ONLY
