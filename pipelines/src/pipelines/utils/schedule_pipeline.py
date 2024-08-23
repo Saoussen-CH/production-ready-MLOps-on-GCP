@@ -120,22 +120,30 @@ def main():
     )
     parser.add_argument(
         "--enable_caching",
-        action="store_true",
-        help="Enable caching for the pipeline run.",
-    )
-    parser.add_argument(
-        "--use_latest_data",
-        action="store_true",
-        help="Use the latest data for the pipeline run.",
+        help="Whether to enable caching for the pipeline",
+        type=str,
+        choices=["true", "false"],
+        default="false",
     )
     parser.add_argument(
         "--timestamp",
+        help="Optional. Empty or a specific timestamp in ISO 8601 format",
         type=str,
         default="",
-        help="Specify the timestamp for the pipeline in ISO 8601 format.",
+    )
+    parser.add_argument(
+        "--use_latest_data",
+        help="Whether to use the latest available data or the fixed timestamp",
+        type=str,
+        choices=["true", "false"],
+        default="true",
     )
 
     args = parser.parse_args()
+
+    # Convert "true"/"false" to boolean
+    enable_caching = args.enable_caching.lower() == "true"
+    use_latest_data = args.use_latest_data.lower() == "true"
 
     schedule_pipeline(
         template_path=args.template_path,
@@ -144,8 +152,8 @@ def main():
         schedule_name=args.schedule_name,
         pipeline_type=args.pipeline_type,
         cron=args.cron,
-        enable_caching=args.enable_caching,
-        use_latest_data=args.use_latest_data,
+        enable_caching=enable_caching,
+        use_latest_data=use_latest_data,
         timestamp=args.timestamp,
     )
 
