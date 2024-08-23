@@ -32,6 +32,7 @@ def schedule_pipeline(
     Returns:
         pipeline_job_schedules.PipelineJobSchedule: The scheduled pipeline job.
     """
+
     # Retrieve environment variables
     project = env.get("VERTEX_PROJECT_ID")
     location = env.get("VERTEX_LOCATION")
