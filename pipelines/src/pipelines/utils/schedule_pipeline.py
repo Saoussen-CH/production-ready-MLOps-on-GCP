@@ -65,6 +65,8 @@ def schedule_pipeline(
     else:
         raise ValueError(f"Unsupported pipeline type: {pipeline_type}")
 
+    logging.info(f"Parameters: {parameters}")
+
     pipeline_job = aiplatform.PipelineJob(
         template_path=template_path,
         pipeline_root=pipeline_root,
