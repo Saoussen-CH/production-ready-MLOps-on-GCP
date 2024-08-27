@@ -179,3 +179,8 @@ env.sh
 *.tfstate
 *.tfstate.*
 .terraform.lock.hcl
+
+# Cloud Function zip
+terraform/**/*.zip
+
+*.tfvars
