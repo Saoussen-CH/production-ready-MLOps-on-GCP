@@ -51,3 +51,8 @@ variable "pipelines_sa_project_roles" {
     "roles/bigquery.jobUser",
   ]
 }
+
+variable "service_account_email" {
+  description = "The service account email"
+  type        = string
+}
