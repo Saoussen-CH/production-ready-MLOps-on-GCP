@@ -44,11 +44,21 @@ resource "google_cloudfunctions2_function" "default" {
     service_account_email = var.crf_service_account
   }
 
-  event_trigger {
+ event_trigger {
     trigger_region = var.region
-    event_type = "google.cloud.bigquery.v2.JobService.InsertJob"
-    retry_policy = "RETRY_POLICY_RETRY"
+    event_type = "google.cloud.audit.log.v1.written"
+    retry_policy = "RETRY_POLICY_DO_NOT_RETRY"  # Disable retry on failure
     service_account_email = var.crf_service_account
+
+    event_filters {
+      attribute = "serviceName"
+      value = "bigquery.googleapis.com"
+    }
+
+    event_filters {
+      attribute = "methodName"
+      value = "google.cloud.bigquery.v2.JobService.InsertJob"
+    }
 
     event_filters {
       attribute = "resourceName"
@@ -56,6 +66,7 @@ resource "google_cloudfunctions2_function" "default" {
     }
   }
 }
+
 
 
 output "function_uri" {
