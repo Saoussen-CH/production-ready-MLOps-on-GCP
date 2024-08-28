@@ -17,3 +17,7 @@ output "gcf_source_bucket" {
 output "google_pubsub_topic" {
   value = google_pubsub_topic.pipeline_completion
 }
+
+output "pipeline_completion" {
+  value = google_pubsub_topic.pipeline_completion.id
+}
