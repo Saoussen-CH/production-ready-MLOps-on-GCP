@@ -27,9 +27,11 @@ module "vertex_deployment" {
   project_id = var.project_id
   region     = var.region
 
-    # The following variables are now sourced from auto.tfvars
+  # The following variables are now sourced from auto.tfvars
   prediction_template_path = var.prediction_template_path
   training_template_path   = var.training_template_path
   timestamp                = var.timestamp
   use_latest_data          = var.use_latest_data
+  dataset_id           = var.dataset_id
+  table_id = var.table_id
 }

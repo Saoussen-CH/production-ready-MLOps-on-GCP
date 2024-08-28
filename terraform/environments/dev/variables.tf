@@ -28,3 +28,13 @@ variable "use_latest_data" {
   description = "Flag to determine whether to use the latest data."
   type        = string
 }
+
+variable "dataset_id" {
+  type = string
+  description = "The ID of the BigQuery dataset containing the target table."
+}
+
+variable "table_id" {
+  type = string
+  description = "The ID of the BigQuery table where row insertions will trigger the function."
+}
