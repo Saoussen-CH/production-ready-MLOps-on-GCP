@@ -84,7 +84,8 @@ variable "cloudrunfunction_sa_project_roles" {
     "roles/eventarc.admin",
     "roles/cloudfunctions.admin",
     "roles/pubsub.editor",
-    "roles/pubsub.subscriber"
+    "roles/pubsub.subscriber",
+    "roles/eventarc.eventReceiver",
   ]
 }
 

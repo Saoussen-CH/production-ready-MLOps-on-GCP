@@ -27,7 +27,7 @@ resource "google_service_account_iam_member" "cloudrunfunction_sa_can_use_pipeli
   member             = "serviceAccount:${google_service_account.vertex_cloudrunfunction_sa.email}"
 }
 
-# Give cloud functions SA access to KFP Artifact Registry to access compiled pipelines
+# Give cloud run functions SA access to KFP Artifact Registry to access compiled pipelines
 resource "google_artifact_registry_repository_iam_member" "cloudrunfunction_sa_can_access_ar" {
   project    = google_artifact_registry_repository.mlops_pipeline_repo.project
   location   = google_artifact_registry_repository.mlops_pipeline_repo.location
@@ -36,15 +36,15 @@ resource "google_artifact_registry_repository_iam_member" "cloudrunfunction_sa_c
   member     = "serviceAccount:${google_service_account.vertex_cloudrunfunction_sa.email}"
 }
 
-# Give cloud functions SA access to pipeline root bucket to check it exists
+# Give cloud Run functions SA access to pipeline root bucket to check it exists
 resource "google_storage_bucket_iam_member" "cloudrunfunction_sa_can_get_pl_root_bucket" {
   bucket = google_storage_bucket.pipeline_root_bucket.name
   role   = "roles/storage.legacyBucketReader"
   member = "serviceAccount:${google_service_account.vertex_cloudrunfunction_sa.email}"
 }
 
-# Cloud Function SA project roles
-resource "google_project_iam_member" "cloudfunction_sa_project_roles" {
+# Cloud Run Function SA project roles
+resource "google_project_iam_member" "cloudrunfunction_sa_project_roles" {
   for_each = toset(var.cloudrunfunction_sa_project_roles)
   project  = var.project_id
   role     = each.key
