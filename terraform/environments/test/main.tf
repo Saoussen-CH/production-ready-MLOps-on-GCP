@@ -32,4 +32,6 @@ module "vertex_deployment" {
   training_template_path   = var.training_template_path
   timestamp                = var.timestamp
   use_latest_data          = var.use_latest_data
+  dataset_id               = var.dataset_id
+  table_id                 = var.table_id
 }

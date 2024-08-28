@@ -118,7 +118,8 @@ module "cloudrunfunction" {
   max_instances        = var.max_instances
   available_memory_mb  = var.available_memory_mb
   timeout              = var.timeout
-
+  dataset_id           = var.dataset_id
+  table_id             = var.table_id
   pipeline_config = {
     project                  = var.project_id
     location                 = var.region

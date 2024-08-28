@@ -32,7 +32,7 @@ resource "google_cloudfunctions2_function" "default" {
     source {
       storage_source {
         bucket = google_storage_bucket_object.archive.bucket
-        object = google_storage_bucket_object.archive.output_name
+        object = google_storage_bucket_object.archive.name
       }
     }
   }
@@ -43,33 +43,20 @@ resource "google_cloudfunctions2_function" "default" {
     timeout_seconds    = var.timeout
     service_account_email = var.crf_service_account
   }
-}
 
-resource "google_cloud_run_service_iam_member" "member" {
-  location = google_cloudfunctions2_function.default.location
-  service  = google_cloudfunctions2_function.default.name
-  role     = "roles/run.invoker"
-  member   = "allUsers"
-}
+  event_trigger {
+    trigger_region = var.region
+    event_type = "google.cloud.bigquery.v2.JobService.InsertJob"
+    retry_policy = "RETRY_POLICY_RETRY"
+    service_account_email = var.crf_service_account
 
-resource "google_eventarc_trigger" "bigquery_trigger" {
-  name            = "bigquery-trigger"
-  project         = var.project_id
-  location        = var.region
-  service_account = var.crf_service_account
-
-  matching_criteria {
-    attribute = "type"
-    value     = "google.cloud.bigquery.v2.JobService.InsertJob"
-  }
-
-  destination {
-    cloud_run_service {
-      service = google_cloudfunctions2_function.default.name
-      region  = google_cloudfunctions2_function.default.location
+    event_filters {
+      attribute = "resourceName"
+      value = "/projects/${var.project_id}/datasets/${var.dataset_id}/tables/${var.table_id}"
     }
   }
 }
+
 
 output "function_uri" {
   value = google_cloudfunctions2_function.default.service_config[0].uri
