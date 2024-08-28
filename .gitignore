@@ -182,5 +182,3 @@ env.sh
 
 # Cloud Function zip
 terraform/**/*.zip
-
-*.tfvars
