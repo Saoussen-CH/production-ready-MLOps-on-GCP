@@ -55,7 +55,13 @@ def submit_pipeline_job(config):
             {"training_job_display_name": f"{config['display_name']}-training-job"}
         )
         submit_pipeline_request(
-            template_uri, config, parameters, service_account, pipeline_root
+            template_uri,
+            config,
+            parameters,
+            service_account,
+            pipeline_root,
+            project_id,
+            location,
         )
 
         subscribe_to_pubsub(config)
@@ -66,12 +72,24 @@ def submit_pipeline_job(config):
             {"prediction_job_display_name": f"{config['display_name']}-prediction-job"}
         )
         submit_pipeline_request(
-            template_uri, config, parameters, service_account, pipeline_root
+            template_uri,
+            config,
+            parameters,
+            service_account,
+            pipeline_root,
+            project_id,
+            location,
         )
 
 
 def submit_pipeline_request(
-    template_uri, config, parameters, service_account, pipeline_root
+    template_uri,
+    config,
+    parameters,
+    service_account,
+    pipeline_root,
+    project_id,
+    location,
 ):
     # If template_uri is an AR URL and a tag is used, resolve to exact version
     # Workaround for known issue
@@ -100,7 +118,7 @@ def submit_pipeline_request(
         "serviceAccount": service_account,
     }
 
-    pipeline_url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{config['project']}/locations/{config['location']}/pipelineJobs"  # noqa
+    pipeline_url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{project_id}/locations/{location}/pipelineJobs"  # noqa
     creds, project = google.auth.default()
     auth_req = google.auth.transport.requests.Request()
     creds.refresh(auth_req)
