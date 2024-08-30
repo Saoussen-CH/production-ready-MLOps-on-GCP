@@ -123,7 +123,7 @@ variable "max_instances" {
 variable "available_memory_mb" {
   description = "Memory allocated for the function in MB."
   type        = string
-  default     = "256 MiB"
+  default     = "256 Mi"
 }
 
 variable "timeout" {
