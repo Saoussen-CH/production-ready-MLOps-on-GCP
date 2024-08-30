@@ -39,7 +39,7 @@ resource "google_cloudfunctions2_function" "default" {
     available_memory   = var.available_memory_mb
     timeout_seconds    = var.timeout
     service_account_email = var.crf_service_account
-    environment_variables = merge(var.environment_variables, {
+    environment_variables = merge(var.environment_variables_config, {
       PIPELINE_CONFIG = jsonencode(var.pipeline_config)
     })
   }

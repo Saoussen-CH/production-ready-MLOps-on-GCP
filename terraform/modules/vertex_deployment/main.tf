@@ -120,10 +120,13 @@ module "cloudrunfunction" {
   timeout              = var.timeout
   dataset_id           = var.dataset_id
   table_id             = var.table_id
+  environment_variables_config = {
+    VERTEX_LOCATION      = var.region
+    VERTEX_PIPELINE_ROOT = google_storage_bucket.pipeline_root_bucket.url
+    VERTEX_PROJECT_ID    = var.project_id
+    VERTEX_SA_EMAIL      = google_service_account.pipelines_sa.email
+  }
   pipeline_config = {
-    project                  = var.project_id
-    location                 = var.region
-    base_output_dir          = google_storage_bucket.pipeline_root_bucket.url
     training_template_path   = var.training_template_path
     prediction_template_path = var.prediction_template_path
     display_name             = "mlops-pipeline"
