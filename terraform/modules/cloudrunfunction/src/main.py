@@ -61,7 +61,9 @@ def submit_pipeline_job(config):
         parameters.update(
             {"prediction_job_display_name": f"{config['display_name']}-prediction-job"}
         )
-        submit_pipeline_request(template_uri, config, parameters, service_account)
+        submit_pipeline_request(
+            template_uri, config, parameters, service_account, pipeline_root
+        )
 
 
 def submit_pipeline_request(
