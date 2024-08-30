@@ -48,7 +48,7 @@ variable "crf_service_account" {
   type        = string
 }
 
-variable "environment_variables" {
+variable "environment_variables_config" {
   description = "A set of key/value environment variable pairs to assign to the function."
   type        = map(string)
   default     = null

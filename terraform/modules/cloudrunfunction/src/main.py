@@ -33,9 +33,10 @@ def mlops_entrypoint(event):
 
 
 def submit_pipeline_job(config):
-    project_id = config["project"]
-    location = config["location"]
-    pipeline_root = config["base_output_dir"]
+    project_id = os.getenv("VERTEX_PROJECT_ID")
+    location = os.getenv("VERTEX_LOCATION")
+    pipeline_root = os.getenv("VERTEX_PIPELINE_ROOT")
+    service_account = os.getenv("VERTEX_SA_EMAIL")
 
     parameters = {
         "project": project_id,
@@ -60,18 +61,21 @@ def submit_pipeline_job(config):
         parameters.update(
             {"prediction_job_display_name": f"{config['display_name']}-prediction-job"}
         )
-        submit_pipeline_request(template_uri, config, parameters)
+        submit_pipeline_request(template_uri, config, parameters, service_account)
 
 
-def submit_pipeline_request(template_uri, config, parameters):
+def submit_pipeline_request(
+    template_uri, config, parameters, service_account, pipeline_root
+):
     request_body = {
         "name": f"{config['display_name']}-pipeline",
         "displayName": f"{config['display_name']}-pipeline",
         "runtimeConfig": {
-            "gcsOutputDirectory": config["base_output_dir"],
+            "gcsOutputDirectory": pipeline_root,
             "parameterValues": parameters,
         },
         "templateUri": template_uri,
+        "serviceAccount": service_account,
     }
 
     pipeline_url = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{config['project']}/locations/{config['location']}/pipelineJobs"  # noqa
