@@ -86,6 +86,7 @@ variable "cloudrunfunction_sa_project_roles" {
     "roles/pubsub.editor",
     "roles/pubsub.subscriber",
     "roles/eventarc.eventReceiver",
+    "roles/aiplatform.serviceAgent"
   ]
 }
 
@@ -122,7 +123,7 @@ variable "max_instances" {
 variable "available_memory_mb" {
   description = "Memory allocated for the function in MB."
   type        = string
-  default     = "256M"
+  default     = "256 MiB"
 }
 
 variable "timeout" {

@@ -26,9 +26,6 @@ resource "google_cloudfunctions2_function" "default" {
   build_config {
     runtime     = var.runtime
     entry_point = var.entry_point
-    environment_variables = merge(var.environment_variables, {
-      PIPELINE_CONFIG = jsonencode(var.pipeline_config)
-    })
     source {
       storage_source {
         bucket = google_storage_bucket_object.archive.bucket
@@ -42,12 +39,15 @@ resource "google_cloudfunctions2_function" "default" {
     available_memory   = var.available_memory_mb
     timeout_seconds    = var.timeout
     service_account_email = var.crf_service_account
+    environment_variables = merge(var.environment_variables, {
+      PIPELINE_CONFIG = jsonencode(var.pipeline_config)
+    })
   }
 
- event_trigger {
+  event_trigger {
     trigger_region = var.region
     event_type = "google.cloud.audit.log.v1.written"
-    retry_policy = "RETRY_POLICY_DO_NOT_RETRY"  # Disable retry on failure
+    retry_policy = "RETRY_POLICY_RETRY"
     service_account_email = var.crf_service_account
 
     event_filters {
@@ -62,12 +62,10 @@ resource "google_cloudfunctions2_function" "default" {
 
     event_filters {
       attribute = "resourceName"
-      value = "/projects/${var.project_id}/datasets/${var.dataset_id}/tables/${var.table_id}"
+      value = "projects/${var.project_id}/datasets/${var.dataset_id}/tables/${var.table_id}"
     }
   }
 }
-
-
 
 output "function_uri" {
   value = google_cloudfunctions2_function.default.service_config[0].uri
