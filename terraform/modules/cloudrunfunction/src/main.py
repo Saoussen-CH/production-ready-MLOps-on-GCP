@@ -8,6 +8,7 @@ import google.auth
 import google.auth.transport.requests
 from kfp.registry import RegistryClient
 from google.cloud import pubsub_v1
+from google.cloud import artifactregistry_v1
 
 logging.basicConfig(level=logging.INFO)
 
@@ -50,7 +51,7 @@ def submit_pipeline_job(config):
     }
 
     if config["type"] == "training":
-        template_uri = config["training_template_path"]
+        template_uri = get_package_digest_uri(config["training_template_path"])
         parameters.update(
             {"training_job_display_name": f"{config['display_name']}-training-job"}
         )
@@ -67,7 +68,7 @@ def submit_pipeline_job(config):
         subscribe_to_pubsub(config)
 
     elif config["type"] == "prediction":
-        template_uri = config["prediction_template_path"]
+        template_uri = get_package_digest_uri(config["prediction_template_path"])
         parameters.update(
             {"prediction_job_display_name": f"{config['display_name']}-prediction-job"}
         )
@@ -80,6 +81,39 @@ def submit_pipeline_job(config):
             project_id,
             location,
         )
+
+
+def get_package_digest_uri(version_uri):
+    # Parse the version URI to extract the necessary components
+    import re
+
+    match = re.match(
+        r"https://([\w\-]+)-kfp\.pkg\.dev/([\w\-]+)/([\w\-]+)/([\w\-]+)/([\w\-]+)",
+        version_uri,
+    )
+    if not match:
+        raise ValueError(f"Invalid version URI: {version_uri}")
+
+    region, project, repo, package, version = match.groups()
+
+    # Initialize the Artifact Registry client
+    client = artifactregistry_v1.ArtifactRegistryClient()
+    parent = (
+        f"projects/{project}/locations/{region}/repositories/{repo}/packages/{package}"
+    )
+
+    # Get the package
+    package_name = f"{parent}/versions/{version}"
+    package = client.get_package(name=package_name)
+
+    # Get the digest for the specified version
+    version_name = f"{parent}/versions/{version}"
+    version = client.get_version(name=version_name)
+    digest = version.name.split("/")[-1]
+
+    # Construct the digest URI
+    digest_uri = f"https://{region}-kfp.pkg.dev/{project}/{repo}/{package}/{digest}"
+    return digest_uri
 
 
 def submit_pipeline_request(
