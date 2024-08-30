@@ -135,7 +135,9 @@ def submit_pipeline_request(
 def subscribe_to_pubsub(config):
     subscriber = pubsub_v1.SubscriberClient()
     topic_name = config["pubsub_topic_name"]
-    subscription_path = subscriber.subscription_path(config["project"], topic_name)
+    subscription_path = subscriber.subscription_path(
+        os.getenv("VERTEX_PROJECT_ID"), topic_name
+    )
 
     def callback(message):
         message.ack()
