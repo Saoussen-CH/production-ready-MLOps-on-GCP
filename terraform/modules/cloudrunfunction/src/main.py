@@ -54,7 +54,9 @@ def submit_pipeline_job(config):
         parameters.update(
             {"training_job_display_name": f"{config['display_name']}-training-job"}
         )
-        submit_pipeline_request(template_uri, config, parameters)
+        submit_pipeline_request(
+            template_uri, config, parameters, service_account, pipeline_root
+        )
 
         subscribe_to_pubsub(config)
 
