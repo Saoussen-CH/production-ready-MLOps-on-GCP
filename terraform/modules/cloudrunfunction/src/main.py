@@ -7,7 +7,8 @@ import requests
 import google.auth
 import google.auth.transport.requests
 from google.cloud import pubsub_v1
-from google.cloud import artifactregistry_v1
+from kfp.registry import RegistryClient
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -51,6 +52,7 @@ def submit_pipeline_job(config):
 
     if config["type"] == "training":
         template_uri = get_package_digest_uri(config["training_template_path"])
+        logging.info(f"training_template_uri: {template_uri}")
         parameters.update(
             {"training_job_display_name": f"{config['display_name']}-training-job"}
         )
@@ -68,6 +70,7 @@ def submit_pipeline_job(config):
 
     elif config["type"] == "prediction":
         template_uri = get_package_digest_uri(config["prediction_template_path"])
+        logging.info(f"prediction_template_uri: {template_uri}")
         parameters.update(
             {"prediction_job_display_name": f"{config['display_name']}-prediction-job"}
         )
@@ -83,34 +86,49 @@ def submit_pipeline_job(config):
 
 
 def get_package_digest_uri(version_uri):
-    # Parse the version URI to extract the necessary components
+    # Check if the URI already contains a digest
+    if "sha256:" in version_uri:
+        return version_uri
 
+    # Parse the version URI to extract the necessary components
     match = re.match(
-        r"https://([\w\-]+)-kfp\.pkg\.dev/([\w\-]+)/([\w\-]+)/([\w\-]+)/([\w\-]+)",
+        r"https://([\w\-]+)-kfp\.pkg\.dev/([\w\-]+)/([\w\-]+)/([\w\-]+)/([\w\-.]+)",
         version_uri,
     )
     if not match:
         raise ValueError(f"Invalid version URI: {version_uri}")
 
-    region, project, repo, package, version = match.groups()
-
-    # Initialize the Artifact Registry client
-    client = artifactregistry_v1.ArtifactRegistryClient()
-    parent = (
-        f"projects/{project}/locations/{region}/repositories/{repo}/packages/{package}"
+    region, project, repo, package_name, tag = match.groups()
+    logging.info(
+        f"Parsed URI components: region={region}, project={project}, repo={repo}, package={package_name}, tag={tag}"  # noqa
     )
 
-    # Get the package
-    package_name = f"{parent}/versions/{version}"
-    package = client.get_package(name=package_name)
+    # Initialize the RegistryClient
+    host = f"https://{region}-kfp.pkg.dev/{project}/{repo}"
+    client = RegistryClient(host=host)
 
-    # Get the digest for the specified version
-    version_name = f"{parent}/versions/{version}"
-    version = client.get_version(name=version_name)
-    digest = version.name.split("/")[-1]
+    # Get the tag metadata
+    try:
+        metadata = client.get_tag(package_name, tag)
+    except Exception as e:
+        logging.error(f"Failed to get tag metadata: {e}")
+        raise
+
+    # Extract the version (digest) from the metadata
+    version = metadata["version"]
+    logging.info(f"version= {version}")
+    if "sha256:" not in version:
+        raise ValueError(f"Invalid version format: {version}")
+
+    version = version[version.find("sha256:") :]
+    logging.info(f"version sha256 = {version}")
 
     # Construct the digest URI
-    digest_uri = f"https://{region}-kfp.pkg.dev/{project}/{repo}/{package}/{digest}"
+    digest_uri = (
+        f"https://{region}-kfp.pkg.dev/{project}/{repo}/{package_name}/{version}"
+    )
+    logging.info(f"digest_uri: {digest_uri}")
+
     return digest_uri
 
 
