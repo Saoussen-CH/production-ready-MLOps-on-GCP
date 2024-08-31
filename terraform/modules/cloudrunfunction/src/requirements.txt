@@ -3,3 +3,4 @@ google-auth==2.6.0
 requests==2.26.0
 google-cloud-pubsub
 kfp==2.7.0
+google-cloud-artifact-registry
