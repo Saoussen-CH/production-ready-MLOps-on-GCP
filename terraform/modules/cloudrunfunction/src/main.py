@@ -6,7 +6,6 @@ import functions_framework
 import requests
 import google.auth
 import google.auth.transport.requests
-from kfp.registry import RegistryClient
 from google.cloud import pubsub_v1
 from google.cloud import artifactregistry_v1
 
@@ -85,7 +84,6 @@ def submit_pipeline_job(config):
 
 def get_package_digest_uri(version_uri):
     # Parse the version URI to extract the necessary components
-    import re
 
     match = re.match(
         r"https://([\w\-]+)-kfp\.pkg\.dev/([\w\-]+)/([\w\-]+)/([\w\-]+)/([\w\-]+)",
@@ -125,22 +123,6 @@ def submit_pipeline_request(
     project_id,
     location,
 ):
-    # If template_uri is an AR URL and a tag is used, resolve to exact version
-    # Workaround for known issue
-    # https://github.com/googleapis/python-aiplatform/issues/2181
-    _VALID_AR_URL = re.compile(
-        r"https://([\w\-]+)-kfp\.pkg\.dev/([\w\-]+)/([\w\-]+)/([\w\-]+)/([\w\-.]+)",
-        re.IGNORECASE,
-    )
-    match = _VALID_AR_URL.match(template_uri)
-    if match and "sha256:" not in template_uri:
-        region, project, repo, package_name, tag = match.group(1, 2, 3, 4, 5)
-        host = f"https://{region}-kfp.pkg.dev/{project}/{repo}"
-        client = RegistryClient(host=host)
-        metadata = client.get_tag(package_name, tag)
-        version = metadata["version"][metadata["version"].find("sha256:") :]
-        template_uri = f"{host}/{package_name}/{version}"
-
     request_body = {
         "name": f"{config['display_name']}-pipeline",
         "displayName": f"{config['display_name']}-pipeline",
