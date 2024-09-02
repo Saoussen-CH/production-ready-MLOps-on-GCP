@@ -8,7 +8,7 @@ steps:
       - -c
       - |
         terraform init -input=false -backend-config='bucket=${_PROJECT_ID}-tfstate' && \
-        terraform plan -input=false -var 'project_id=${_PROJECT_ID}' -var 'region=${_REGION}' -var-file="pipeline_settings.auto.tfvars"
+        terraform plan -input=false -var 'project_id=${_PROJECT_ID}' -var 'region=${_REGION}' -var 'training_template_path={_TRAINING_TEMPLATE_URI}' -var 'prediction_template_path={_PREDICTION_TEMPLATE_URI}' -var-file="pipeline_settings.auto.tfvars"
 
 options:
   logging: CLOUD_LOGGING_ONLY

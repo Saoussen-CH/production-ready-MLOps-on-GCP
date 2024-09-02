@@ -70,6 +70,7 @@ variable "pipelines_sa_project_roles" {
     "roles/logging.logWriter",
     "roles/bigquery.dataEditor",
     "roles/bigquery.jobUser",
+    "roles/artifactregistry.reader"
   ]
 }
 
