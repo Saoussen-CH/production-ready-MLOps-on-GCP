@@ -115,6 +115,10 @@ def schedule_pipeline(
         raise ValueError(f"Unsupported pipeline type: {pipeline_type}")
 
     template_uri = get_package_digest_uri(template_path)
+    
+    logging.info(f"Parameters: {parameters}")
+
+
     pipeline_job = aiplatform.PipelineJob(
         template_path=template_uri,
         pipeline_root=pipeline_root,
@@ -196,6 +200,10 @@ def main():
     enable_caching = args.enable_caching.lower() == "true"
     use_latest_data = args.use_latest_data.lower() == "true"
 
+    # Log the arguments for debugging
+    logging.info(f"enable_caching: {enable_caching}")
+    logging.info(f"use_latest_data: {use_latest_data}")
+    
     schedule_pipeline(
         template_path=args.template_path,
         pipeline_root=args.pipeline_root,
