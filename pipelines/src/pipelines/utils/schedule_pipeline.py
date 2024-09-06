@@ -2,6 +2,55 @@ import argparse
 from google.cloud import aiplatform
 from os import environ as env
 import logging
+import re
+from kfp.registry import RegistryClient
+
+
+def get_package_digest_uri(version_uri):
+    # Check if the URI already contains a digest
+    if "sha256:" in version_uri:
+        return version_uri
+
+    # Parse the version URI to extract the necessary components
+    match = re.match(
+        r"https://([\w\-]+)-kfp\.pkg\.dev/([\w\-]+)/([\w\-]+)/([\w\-]+)/([\w\-.]+)",
+        version_uri,
+    )
+    if not match:
+        raise ValueError(f"Invalid version URI: {version_uri}")
+
+    region, project, repo, package_name, tag = match.groups()
+    logging.info(
+        f"Parsed URI components: region={region}, project={project}, repo={repo}, package={package_name}, tag={tag}"  # noqa
+    )
+
+    # Initialize the RegistryClient
+    host = f"https://{region}-kfp.pkg.dev/{project}/{repo}"
+    client = RegistryClient(host=host)
+
+    # Get the tag metadata
+    try:
+        metadata = client.get_tag(package_name, tag)
+    except Exception as e:
+        logging.error(f"Failed to get tag metadata: {e}")
+        raise
+
+    # Extract the version (digest) from the metadata
+    version = metadata["version"]
+    logging.info(f"version= {version}")
+    if "sha256:" not in version:
+        raise ValueError(f"Invalid version format: {version}")
+
+    version = version[version.find("sha256:") :]
+    logging.info(f"version sha256 = {version}")
+
+    # Construct the digest URI
+    digest_uri = (
+        f"https://{region}-kfp.pkg.dev/{project}/{repo}/{package_name}/{version}"
+    )
+    logging.info(f"digest_uri: {digest_uri}")
+
+    return digest_uri
 
 
 def schedule_pipeline(
@@ -65,8 +114,9 @@ def schedule_pipeline(
     else:
         raise ValueError(f"Unsupported pipeline type: {pipeline_type}")
 
+    template_uri = get_package_digest_uri(template_path)
     pipeline_job = aiplatform.PipelineJob(
-        template_path=template_path,
+        template_path=template_uri,
         pipeline_root=pipeline_root,
         display_name=display_name,
         parameter_values=parameters,
