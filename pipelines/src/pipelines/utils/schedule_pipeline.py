@@ -115,9 +115,6 @@ def schedule_pipeline(
         raise ValueError(f"Unsupported pipeline type: {pipeline_type}")
 
     template_uri = get_package_digest_uri(template_path)
-    
-    logging.info(f"Parameters: {parameters}")
-
 
     pipeline_job = aiplatform.PipelineJob(
         template_path=template_uri,
@@ -127,11 +124,16 @@ def schedule_pipeline(
         enable_caching=enable_caching,
     )
 
-    pipeline_job_schedule = pipeline_job.create_schedule(
-        cron=cron,
+    pipeline_job_schedule = aiplatform.PipelineJobSchedule(
+        pipeline_job=pipeline_job,
         display_name=schedule_name,
+    )
+
+    pipeline_job_schedule.create(
+        cron=cron,
         service_account=service_account,
     )
+
     logging.info(f"Schedule created: {pipeline_job_schedule}")
 
     return pipeline_job_schedule
