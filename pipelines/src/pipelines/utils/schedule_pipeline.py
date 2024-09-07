@@ -115,7 +115,9 @@ def schedule_pipeline(
         raise ValueError(f"Unsupported pipeline type: {pipeline_type}")
 
     template_uri = get_package_digest_uri(template_path)
-
+      # Initialize AI Platform
+    aiplatform.init(project=project, location=location)
+    
     pipeline_job = aiplatform.PipelineJob(
         template_path=template_uri,
         pipeline_root=pipeline_root,
