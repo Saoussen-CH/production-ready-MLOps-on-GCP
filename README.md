@@ -96,7 +96,7 @@ make deploy env=dev VERTEX_PROJECT_ID=$DEV_PROJECT_ID VERTEX_LOCATION=$DEV_LOCAT
 
 ## Run
 
-This repository contains example ML training and prediction pipelines which are explained in [this guide](docs/Pipelines.md).
+This repository contains example ML training and prediction pipelines which are explained in [this guide](docs/cicd-configuration-guide.md).
 
 **Build and push the model training container:**
 The [model/](/model/) directory contains the code for the custom model training container image. Specifically:
