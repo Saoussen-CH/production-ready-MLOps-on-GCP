@@ -96,7 +96,7 @@ make deploy env=dev VERTEX_PROJECT_ID=$DEV_PROJECT_ID VERTEX_LOCATION=$DEV_LOCAT
 
 ## Run
 
-This repository contains example ML training and prediction pipelines which are explained in [this guide](docs/cicd-configuration-guide.md).
+This repository contains example ML training and prediction pipelines which are explained in [this guide](docs/Pipelines.md).
 
 **Build and push the model training container:**
 The [model/](/model/) directory contains the code for the custom model training container image. Specifically:
@@ -191,6 +191,17 @@ Conducts end-to-end (E2E) testing of training and prediction pipelines.
 
 ### 3. `release.yaml`
 
+Handles the release process for ML pipelines.
+
+- **Purpose**: Automate the process of building, tagging, and pushing Docker images for the ML pipelines.
+
+- **Key Tasks**:
+  - Build Docker images for the training and prediction pipelines.
+  - Tag the Docker images with the appropriate version.
+  - Push the Docker images to the Artifact Registry.
+  - Update the pipeline definitions with the new image tags.
+
+
 ### 4. `terraform-plan.yaml`
 
 - **Purpose**: Evaluate Terraform configurations and generate a summary of proposed infrastructure changes.
@@ -207,7 +218,22 @@ Conducts end-to-end (E2E) testing of training and prediction pipelines.
   - Initialize Terraform.
   - Apply Terraform configurations to deploy changes.
 
-For details on setting up CI/CD, see [this guide](./docs/AUTOMATION.md).
+For details on setting up CI/CD, see [this guide](./docs/cicd-configuration-guide.md).
+
+## CT Pipelines Overview
+
+### 1. `schedule-pipelines.yaml`
+
+- **Purpose**: Schedule training and prediction pipelines to run on a specified cron schedule using the Vertex AI Scheduling API.
+
+- **Key Tasks**:
+
+- Install Poetry and project dependencies.
+- Navigate to the source directory.
+- Run the scheduling script for training and prediction pipelines.
+- Schedule the pipelines using the provided cron expressions and environment variables.
+
+
 ## Putting it all together
 
 For a full walkthrough of the journey from changing the ML pipeline code to having it scheduled and running in production, please see the guide [here](./docs/Production.md).
