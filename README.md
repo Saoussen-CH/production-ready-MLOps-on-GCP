@@ -228,10 +228,10 @@ For details on setting up CI/CD, see [this guide](./docs/cicd-configuration-guid
 
 - **Key Tasks**:
 
-- Install Poetry and project dependencies.
-- Navigate to the source directory.
-- Run the scheduling script for training and prediction pipelines.
-- Schedule the pipelines using the provided cron expressions and environment variables.
+  - Install Poetry and project dependencies.
+  - Navigate to the source directory.
+  - Run the scheduling script for training and prediction pipelines.
+  - Schedule the pipelines using the provided cron expressions and environment variables.
 
 
 ## Putting it all together
