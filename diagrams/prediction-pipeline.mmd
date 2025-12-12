@@ -1,0 +1,37 @@
+graph LR
+    subgraph "Input"
+        NewData[New Data<br/>BigQuery Table]
+    end
+
+    subgraph "Prediction Pipeline - Kubeflow"
+        Lookup[Lookup Champion Model]
+        Preprocess[Data Preprocessing]
+        BatchPredict[Batch Prediction Job]
+        Monitor[Model Monitoring<br/>Skew Detection]
+    end
+
+    subgraph "Storage & Registry"
+        Registry[Model Registry<br/>Champion Model]
+        Predictions[Predictions<br/>BigQuery Output]
+        Alerts[Email Alerts]
+    end
+
+    subgraph "Monitoring"
+        Skew{Data Skew<br/>Detected?}
+        Log[Cloud Logging]
+    end
+
+    NewData --> Preprocess
+    Lookup --> Registry
+    Registry --> |Get default model| BatchPredict
+    Preprocess --> |Preprocessed data| BatchPredict
+    BatchPredict --> Predictions
+    BatchPredict --> Monitor
+    Monitor --> Skew
+    Skew --> |Yes| Alerts
+    Skew --> |Metrics| Log
+
+    style Registry fill:#ea4335
+    style BatchPredict fill:#34a853
+    style Monitor fill:#fbbc04
+    style Alerts fill:#ff6d00

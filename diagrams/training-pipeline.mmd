@@ -1,0 +1,45 @@
+graph LR
+    subgraph "Data Layer"
+        BQ_Raw[BigQuery<br/>Chicago Taxi Trips<br/>Raw Data]
+        BQ_Processed[Processed Data]
+    end
+
+    subgraph "Training Pipeline - Kubeflow"
+        Extract[Extract Table to GCS]
+        Split[Data Splitting<br/>Train/Val/Test]
+        Tune[Hyperparameter Tuning<br/>Vertex AI HyperTune]
+        Train[Model Training<br/>Custom Container]
+        Eval[Model Evaluation]
+        Upload[Upload to Registry]
+    end
+
+    subgraph "Compute & Storage"
+        GCS[Cloud Storage<br/>Artifacts]
+        Custom[Custom Training<br/>TensorFlow Container]
+        Registry[Vertex AI<br/>Model Registry]
+    end
+
+    subgraph "Model Selection"
+        Champion[Champion Model]
+        Challenger[Challenger Model]
+        Compare[RMSE Comparison]
+    end
+
+    BQ_Raw --> |SQL Preprocessing| BQ_Processed
+    BQ_Processed --> Extract
+    Extract --> |CSV files| GCS
+    GCS --> Split
+    Split --> Tune
+    Tune --> |Best hyperparameters| Train
+    Train --> Custom
+    Custom --> |Trained model| Eval
+    Eval --> Compare
+    Compare --> |If better| Upload
+    Upload --> Registry
+    Registry --> Champion
+    Registry --> Challenger
+
+    style BQ_Raw fill:#669df6
+    style Tune fill:#fbbc04
+    style Custom fill:#34a853
+    style Registry fill:#ea4335

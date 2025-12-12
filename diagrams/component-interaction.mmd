@@ -1,0 +1,52 @@
+graph TB
+    subgraph "Reusable KFP Components"
+        C1[extract_table_to_gcs_op]
+        C2[get_training_args_dict_op]
+        C3[get_workerpool_spec_op]
+        C4[lookup_model_op]
+        C5[upload_best_model_op]
+        C6[model_batch_predict_op]
+        C7[get_custom_job_results_op]
+        C8[get_hyperparameter_tuning_results_op]
+    end
+
+    subgraph "Training Pipeline"
+        TP[training.py]
+    end
+
+    subgraph "Prediction Pipeline"
+        PP[prediction.py]
+    end
+
+    subgraph "GCP Services"
+        BQ[BigQuery]
+        GCS[Cloud Storage]
+        Vertex[Vertex AI]
+        Registry[Model Registry]
+    end
+
+    TP --> C1
+    TP --> C2
+    TP --> C3
+    TP --> C5
+    TP --> C7
+    TP --> C8
+
+    PP --> C1
+    PP --> C4
+    PP --> C6
+
+    C1 --> BQ
+    C1 --> GCS
+    C4 --> Registry
+    C5 --> Registry
+    C6 --> Vertex
+    C7 --> Vertex
+    C8 --> Vertex
+
+    style TP fill:#4285f4
+    style PP fill:#34a853
+    style C1 fill:#fbbc04
+    style C4 fill:#fbbc04
+    style C5 fill:#fbbc04
+    style C6 fill:#fbbc04

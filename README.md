@@ -22,6 +22,82 @@ This setup utilizes four distinct Google Cloud projects:
 * `prod`: The production environment.
 * `admin`: A separate project used to configure CI/CD in Cloud Build, as these pipelines manage deployments across all other environments.
 
+### Architecture Diagram
+
+```mermaid
+graph TB
+    subgraph "GitHub Repository"
+        Code[Code Repository]
+        PR[Pull Requests]
+        Release[Git Tags/Releases]
+    end
+
+    subgraph "GCP Admin Project - CI/CD"
+        CB[Cloud Build]
+        CB_PR[PR Checks Trigger]
+        CB_E2E[E2E Test Trigger]
+        CB_TF_Plan[Terraform Plan Trigger]
+        CB_TF_Apply[Terraform Apply Trigger]
+        CB_Release[Release Trigger]
+        CB_Schedule[Schedule Trigger]
+    end
+
+    subgraph "GCP Dev Project"
+        Dev_AR[Artifact Registry]
+        Dev_Vertex[Vertex AI Pipelines]
+        Dev_BQ[BigQuery]
+        Dev_GCS[Cloud Storage]
+        Dev_Registry[Model Registry]
+    end
+
+    subgraph "GCP Test Project"
+        Test_AR[Artifact Registry]
+        Test_Vertex[Vertex AI Pipelines]
+        Test_BQ[BigQuery]
+        Test_GCS[Cloud Storage]
+        Test_Registry[Model Registry]
+    end
+
+    subgraph "GCP Prod Project"
+        Prod_AR[Artifact Registry]
+        Prod_Vertex[Vertex AI Pipelines]
+        Prod_BQ[BigQuery]
+        Prod_GCS[Cloud Storage]
+        Prod_Registry[Model Registry]
+        Prod_CRF[Cloud Run Function]
+        Prod_PubSub[Pub/Sub]
+    end
+
+    Code --> PR
+    PR --> CB_PR
+    PR --> CB_TF_Plan
+    PR --> CB_E2E
+    Code --> Release
+    Release --> CB_Release
+
+    CB_PR --> |Pre-commit checks| CB
+    CB_E2E --> |Run E2E tests| Dev_Vertex
+    CB_TF_Plan --> |Plan infrastructure| CB
+    CB_TF_Apply --> |Deploy infrastructure| Dev_AR
+    CB_TF_Apply --> |Deploy infrastructure| Test_AR
+    CB_TF_Apply --> |Deploy infrastructure| Prod_AR
+
+    CB_Release --> |Build & push images| Dev_AR
+    CB_Release --> |Build & push images| Test_AR
+    CB_Release --> |Build & push images| Prod_AR
+
+    CB_Schedule --> |Create schedules| Test_Vertex
+    CB_Schedule --> |Create schedules| Prod_Vertex
+
+    Prod_CRF --> |Trigger pipelines| Prod_Vertex
+    Prod_PubSub --> |Notify completion| Prod_CRF
+
+    style CB fill:#4285f4
+    style Dev_Vertex fill:#34a853
+    style Test_Vertex fill:#fbbc04
+    style Prod_Vertex fill:#ea4335
+```
+
 
 ## Setup
 
@@ -63,13 +139,18 @@ gcloud auth login
 gcloud auth application-default login
 ```
 
+#### Project Structure
 
-## Project Structure
-
-- `pipelines/`: Contains pipeline definitions and related scripts.
-- `components/`: Contains modular components used in pipelines.
-- `terraform/environments/`: Contains Terraform configurations for different environments.
-- `Makefile`: Automates common project tasks.
+```
+├── cloudbuild          # Contains the Cloud Build configuration files for CI/CD.
+├── components          # Contains reusable Kubeflow components.
+├── docs                # Contains project documentation.
+├── model               # Contains the model training code and Dockerfile.
+├── pipelines           # Contains the Kubeflow pipeline definitions and related scripts.
+├── terraform           # Contains the Terraform configuration for infrastructure provisioning.
+├── Makefile            # Contains helpful shortcuts for common tasks.
+└── README.md           # Provides an overview of the project and setup instructions.
+```
 
 **Deploy infrastructure:**
 
