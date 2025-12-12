@@ -1,0 +1,51 @@
+graph TB
+    subgraph "Terraform Modules"
+        Main[Main Configuration]
+        VertexMod[vertex_deployment Module]
+        CRFMod[cloudrunfunction Module]
+    end
+
+    subgraph "GCP Resources - Per Environment"
+        APIs[Enable APIs<br/>Vertex AI, BigQuery,<br/>Storage, Artifact Registry]
+        SA_Pipeline[Service Account<br/>Vertex Pipelines]
+        SA_CRF[Service Account<br/>Cloud Run Function]
+        Bucket_Root[GCS Bucket<br/>Pipeline Root]
+        Bucket_CRF[GCS Bucket<br/>Function Source]
+        AR_Docker[Artifact Registry<br/>Docker Repository]
+        AR_KFP[Artifact Registry<br/>KFP Repository]
+        Metadata[Vertex AI<br/>Metadata Store]
+        PubSub_Topic[Pub/Sub Topic<br/>Pipeline Notifications]
+        CloudRun[Cloud Run Function<br/>Pipeline Trigger]
+    end
+
+    subgraph "IAM Permissions"
+        IAM_Vertex[Vertex AI Roles]
+        IAM_BQ[BigQuery Roles]
+        IAM_Storage[Storage Roles]
+        IAM_AR[Artifact Registry Roles]
+    end
+
+    Main --> VertexMod
+    Main --> CRFMod
+
+    VertexMod --> APIs
+    VertexMod --> SA_Pipeline
+    VertexMod --> SA_CRF
+    VertexMod --> Bucket_Root
+    VertexMod --> Bucket_CRF
+    VertexMod --> AR_Docker
+    VertexMod --> AR_KFP
+    VertexMod --> Metadata
+
+    CRFMod --> PubSub_Topic
+    CRFMod --> CloudRun
+
+    SA_Pipeline --> IAM_Vertex
+    SA_Pipeline --> IAM_BQ
+    SA_Pipeline --> IAM_Storage
+    SA_Pipeline --> IAM_AR
+
+    style VertexMod fill:#4285f4
+    style CRFMod fill:#34a853
+    style SA_Pipeline fill:#fbbc04
+    style CloudRun fill:#ea4335

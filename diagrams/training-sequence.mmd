@@ -1,0 +1,36 @@
+sequenceDiagram
+    participant Dev as Developer
+    participant GH as GitHub
+    participant CB as Cloud Build
+    participant AR as Artifact Registry
+    participant Vertex as Vertex AI Pipelines
+    participant BQ as BigQuery
+    participant GCS as Cloud Storage
+    participant Train as Custom Training Job
+    participant Reg as Model Registry
+
+    Dev->>GH: Push git tag (v1.2)
+    GH->>CB: Trigger release.yaml
+    CB->>CB: Build training container
+    CB->>AR: Push container image
+    CB->>CB: Compile training pipeline
+    CB->>AR: Upload pipeline to KFP repo
+
+    Dev->>CB: Trigger schedule-pipelines.yaml
+    CB->>Vertex: Create pipeline schedule
+
+    Vertex->>BQ: Execute preprocessing SQL
+    BQ->>GCS: Extract train/val/test data
+    Vertex->>Vertex: Start hyperparameter tuning
+    Vertex->>Train: Launch 6 trials (2 parallel)
+    Train->>Train: Train with different hyperparams
+    Train->>Vertex: Return best hyperparameters
+    Vertex->>Train: Train final model
+    Train->>GCS: Save model artifacts
+    Vertex->>Reg: Lookup champion model
+    Vertex->>Vertex: Compare RMSE metrics
+    alt Challenger better than Champion
+        Vertex->>Reg: Upload new champion model
+    else Champion still best
+        Vertex->>Vertex: Keep existing champion
+    end

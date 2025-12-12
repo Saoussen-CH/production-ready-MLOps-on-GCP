@@ -1,0 +1,85 @@
+graph TB
+    subgraph "Developer Workflow"
+        Dev[Developer]
+        Branch[Feature Branch]
+        Commit[Commit Changes]
+        Push[Push to GitHub]
+    end
+
+    subgraph "Pull Request Stage"
+        PR[Create Pull Request]
+        PRChecks[pr-checks.yaml]
+        E2E[e2e-test.yaml<br/>Manual /gcbrun]
+        TFPlan[terraform-plan.yaml]
+    end
+
+    subgraph "Validation"
+        PreCommit[Pre-commit Hooks<br/>Linting, Formatting]
+        UnitTest[Unit Tests<br/>Components & Pipelines]
+        Compile[Pipeline Compilation]
+        E2ETest[E2E Pipeline Test<br/>in Dev Environment]
+        TFValidate[Terraform Plan<br/>Preview Changes]
+    end
+
+    subgraph "Merge & Release"
+        Merge[Merge to Main]
+        TFApply[terraform-apply.yaml<br/>Deploy Infrastructure]
+        Tag[Create Git Tag]
+        Release[release.yaml]
+    end
+
+    subgraph "Deployment"
+        BuildImage[Build Docker Images]
+        PushAR[Push to Artifact Registry]
+        CompilePipeline[Compile Pipelines]
+        UploadPipeline[Upload to AR - KFP Repo]
+        Schedule[schedule-pipelines.yaml<br/>Manual Trigger]
+        CreateSchedule[Create Pipeline Schedules]
+    end
+
+    subgraph "Environments"
+        DevEnv[Dev Environment]
+        TestEnv[Test Environment]
+        ProdEnv[Prod Environment]
+    end
+
+    Dev --> Branch
+    Branch --> Commit
+    Commit --> Push
+    Push --> PR
+
+    PR --> PRChecks
+    PR --> E2E
+    PR --> TFPlan
+
+    PRChecks --> PreCommit
+    PRChecks --> UnitTest
+    PRChecks --> Compile
+
+    E2E --> E2ETest
+    TFPlan --> TFValidate
+
+    PR --> |Approved| Merge
+    Merge --> TFApply
+    TFApply --> DevEnv
+    TFApply --> TestEnv
+    TFApply --> ProdEnv
+
+    Merge --> Tag
+    Tag --> Release
+
+    Release --> BuildImage
+    BuildImage --> PushAR
+    Release --> CompilePipeline
+    CompilePipeline --> UploadPipeline
+
+    UploadPipeline --> Schedule
+    Schedule --> CreateSchedule
+
+    CreateSchedule --> TestEnv
+    CreateSchedule --> ProdEnv
+
+    style PRChecks fill:#4285f4
+    style E2E fill:#34a853
+    style Release fill:#fbbc04
+    style TFApply fill:#ea4335

@@ -11,6 +11,96 @@ There are 6 CI/CD pipelines:
 1. `terraform-apply.yaml` - Applies the Terraform configuration under `terraform/environments/<env>` (e.g. `terraform/environments/test`).
 1. `schedule-pipelines.yaml` - Schedules the training and prediction pipelines to run at specified intervals.
 
+### CI/CD Pipeline Flow
+
+```mermaid
+graph TB
+    subgraph "Developer Workflow"
+        Dev[Developer]
+        Branch[Feature Branch]
+        Commit[Commit Changes]
+        Push[Push to GitHub]
+    end
+
+    subgraph "Pull Request Stage"
+        PR[Create Pull Request]
+        PRChecks[pr-checks.yaml]
+        E2E[e2e-test.yaml<br/>Manual /gcbrun]
+        TFPlan[terraform-plan.yaml]
+    end
+
+    subgraph "Validation"
+        PreCommit[Pre-commit Hooks<br/>Linting, Formatting]
+        UnitTest[Unit Tests<br/>Components & Pipelines]
+        Compile[Pipeline Compilation]
+        E2ETest[E2E Pipeline Test<br/>in Dev Environment]
+        TFValidate[Terraform Plan<br/>Preview Changes]
+    end
+
+    subgraph "Merge & Release"
+        Merge[Merge to Main]
+        TFApply[terraform-apply.yaml<br/>Deploy Infrastructure]
+        Tag[Create Git Tag]
+        Release[release.yaml]
+    end
+
+    subgraph "Deployment"
+        BuildImage[Build Docker Images]
+        PushAR[Push to Artifact Registry]
+        CompilePipeline[Compile Pipelines]
+        UploadPipeline[Upload to AR - KFP Repo]
+        Schedule[schedule-pipelines.yaml<br/>Manual Trigger]
+        CreateSchedule[Create Pipeline Schedules]
+    end
+
+    subgraph "Environments"
+        DevEnv[Dev Environment]
+        TestEnv[Test Environment]
+        ProdEnv[Prod Environment]
+    end
+
+    Dev --> Branch
+    Branch --> Commit
+    Commit --> Push
+    Push --> PR
+
+    PR --> PRChecks
+    PR --> E2E
+    PR --> TFPlan
+
+    PRChecks --> PreCommit
+    PRChecks --> UnitTest
+    PRChecks --> Compile
+
+    E2E --> E2ETest
+    TFPlan --> TFValidate
+
+    PR --> |Approved| Merge
+    Merge --> TFApply
+    TFApply --> DevEnv
+    TFApply --> TestEnv
+    TFApply --> ProdEnv
+
+    Merge --> Tag
+    Tag --> Release
+
+    Release --> BuildImage
+    BuildImage --> PushAR
+    Release --> CompilePipeline
+    CompilePipeline --> UploadPipeline
+
+    UploadPipeline --> Schedule
+    Schedule --> CreateSchedule
+
+    CreateSchedule --> TestEnv
+    CreateSchedule --> ProdEnv
+
+    style PRChecks fill:#4285f4
+    style E2E fill:#34a853
+    style Release fill:#fbbc04
+    style TFApply fill:#ea4335
+```
+
 ## Setting up the CI/CD pipelines
 
 ### Which project should I use for Cloud Build?
@@ -37,6 +127,64 @@ We recommend the following service accounts to be created in the _admin_ project
 | `schedule-pipelines-dev` | `schedule-pipelines.yaml` (dev) | `roles/logging.logWriter` (`admin` project)<br>`roles/aiplatform.user` (`dev` project)<br>`roles/storage.admin` (`dev` project)<br>`roles/iam.serviceAccountUser` (`dev` project) <br>`roles/aiplatform.serviceAgent` (`dev` project)|
 | `schedule-pipelines-test` | `schedule-pipelines.yaml` (test) | `roles/logging.logWriter` (`admin` project)<br>`roles/aiplatform.user` (`test` project)<br>`roles/storage.admin` (`test` project)<br>`roles/iam.serviceAccountUser` (`test` project) <br>`roles/aiplatform.serviceAgent` (`test` project) |
 | `schedule-pipelines-prod` | `schedule-pipelines.yaml` (prod) | `roles/logging.logWriter` (`admin` project)<br>`roles/aiplatform.user` (`prod` project)<br>`roles/storage.admin` (`prod` project)<br>`roles/iam.serviceAccountUser` (`prod` project) <br>`roles/aiplatform.serviceAgent` (`prod` project)|
+
+### Infrastructure Components (Terraform)
+
+The Terraform configuration provisions the following infrastructure components in each environment:
+
+```mermaid
+graph TB
+    subgraph "Terraform Modules"
+        Main[Main Configuration]
+        VertexMod[vertex_deployment Module]
+        CRFMod[cloudrunfunction Module]
+    end
+
+    subgraph "GCP Resources - Per Environment"
+        APIs[Enable APIs<br/>Vertex AI, BigQuery,<br/>Storage, Artifact Registry]
+        SA_Pipeline[Service Account<br/>Vertex Pipelines]
+        SA_CRF[Service Account<br/>Cloud Run Function]
+        Bucket_Root[GCS Bucket<br/>Pipeline Root]
+        Bucket_CRF[GCS Bucket<br/>Function Source]
+        AR_Docker[Artifact Registry<br/>Docker Repository]
+        AR_KFP[Artifact Registry<br/>KFP Repository]
+        Metadata[Vertex AI<br/>Metadata Store]
+        PubSub_Topic[Pub/Sub Topic<br/>Pipeline Notifications]
+        CloudRun[Cloud Run Function<br/>Pipeline Trigger]
+    end
+
+    subgraph "IAM Permissions"
+        IAM_Vertex[Vertex AI Roles]
+        IAM_BQ[BigQuery Roles]
+        IAM_Storage[Storage Roles]
+        IAM_AR[Artifact Registry Roles]
+    end
+
+    Main --> VertexMod
+    Main --> CRFMod
+
+    VertexMod --> APIs
+    VertexMod --> SA_Pipeline
+    VertexMod --> SA_CRF
+    VertexMod --> Bucket_Root
+    VertexMod --> Bucket_CRF
+    VertexMod --> AR_Docker
+    VertexMod --> AR_KFP
+    VertexMod --> Metadata
+
+    CRFMod --> PubSub_Topic
+    CRFMod --> CloudRun
+
+    SA_Pipeline --> IAM_Vertex
+    SA_Pipeline --> IAM_BQ
+    SA_Pipeline --> IAM_Storage
+    SA_Pipeline --> IAM_AR
+
+    style VertexMod fill:#4285f4
+    style CRFMod fill:#34a853
+    style SA_Pipeline fill:#fbbc04
+    style CloudRun fill:#ea4335
+```
 
 ## Recommended triggers
 
@@ -97,3 +245,5 @@ Set up three triggers for `schedule-pipelines.yaml` - one for each of the dev/te
 | dev | **\_TEST_VERTEX_PROJECT_ID**=\<Google Cloud Project ID for the dev environment><br>**\_TEST_VERTEX_LOCATION**=\<Google Cloud region to use for the dev environment><br>**\_ENV**=dev<br>**\_TEST_VERTEX_PIPELINE_ROOT**=\<The GCS folder (i.e. path prefix) that you want to use for the pipeline artifacts and for passing data between stages in the pipeline.`gs://<Project ID for dev environment>-pl-root`><br>**\_TEST_VERTEX_SA_EMAIL**=<\Email address of the service account you want to use to run the ML pipeline `vertex-pipelines@<Project ID for dev environment>.iam.gserviceaccount.com`><br>**\_TRAINING_TAG_NAME**=<\tag of KPF training pipeline release to run on a schedule i.e v1.2.0><br> **\_TEST_ENABLE_PIPELINE_CACHING**=<\Override the default caching behaviour of the ML pipelines. Leave blank to use the default caching behaviour.><br> **\_TEST_TIMESTAMP**=<\Set timestamp to select data for experiment repetability default is ""><br> **\_PREDICTION_TAG_NAME**=<\tag of KPF prediction pipeline release to run on a schedule i.e v1.2.0><br> **\_TEST_BQ_LOCATION**=<\The location of BigQuery datasets used in training and prediction pipelines.><br> **\_TEST_USE_LATEST_DATA**=<\ If set to true, the pipeline will use the latest fresh available data to train/predict on ><br> |
 | test | **\_TEST_VERTEX_PROJECT_ID**=\<Google Cloud Project ID for the test environment><br>**\_TEST_VERTEX_LOCATION**=\<Google Cloud region to use for the test environment><br>**\_ENV**=test<br>**\_TEST_VERTEX_PIPELINE_ROOT**=\<The GCS folder (i.e. path prefix) that you want to use for the pipeline artifacts and for passing data between stages in the pipeline.`gs://<Project ID for test environment>-pl-root`><br>**\_TEST_VERTEX_SA_EMAIL**=<\Email address of the service account you want to use to run the ML pipeline `vertex-pipelines@<Project ID for test environment>.iam.gserviceaccount.com`><br>**\_TRAINING_TAG_NAME**=<\tag of KPF training pipeline release to run on a schedule i.e v1.2.0><br> **\_TEST_ENABLE_PIPELINE_CACHING**=<\Override the default caching behaviour of the ML pipelines. Leave blank to use the default caching behaviour.><br> **\_TEST_TIMESTAMP**=<\Set timestamp to select data for experiment repetability default is ""><br> **\_PREDICTION_TAG_NAME**=<\tag of KPF prediction pipeline release to run on a schedule i.e v1.2.0><br> **\_TEST_BQ_LOCATION**=<\The location of BigQuery datasets used in training and prediction pipelines.><br> **\_TEST_USE_LATEST_DATA**=<\ If set to true, the pipeline will use the latest fresh available data to train/predict on ><br> |
 | prod | **\_TEST_VERTEX_PROJECT_ID**=\<Google Cloud Project ID for the prod environment><br>**\_TEST_VERTEX_LOCATION**=\<Google Cloud region to use for the prod environment><br>**\_ENV**=test<br>**\_TEST_VERTEX_PIPELINE_ROOT**=\<The GCS folder (i.e. path prefix) that you want to use for the pipeline artifacts and for passing data between stages in the pipeline.`gs://<Project ID for prod environment>-pl-root`><br>**\_TEST_VERTEX_SA_EMAIL**=<\Email address of the service account you want to use to run the ML pipeline `vertex-pipelines@<Project ID for prod environment>.iam.gserviceaccount.com`><br>**\_TRAINING_TAG_NAME**=<\tag of KPF training pipeline release to run on a schedule i.e v1.2.0><br> **\_TEST_ENABLE_PIPELINE_CACHING**=<\Override the default caching behaviour of the ML pipelines. Leave blank to use the default caching behaviour.><br> **\_TEST_TIMESTAMP**=<\Set timestamp to select data for experiment repetability default is ""><br> **\_PREDICTION_TAG_NAME**=<\tag of KPF prediction pipeline release to run on a schedule i.e v1.2.0><br> **\_TEST_BQ_LOCATION**=<\The location of BigQuery datasets used in training and prediction pipelines.><br> **\_TEST_USE_LATEST_DATA**=<\ If set to true, the pipeline will use the latest fresh available data to train/predict on ><br> | |
+
+

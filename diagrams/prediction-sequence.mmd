@@ -1,0 +1,30 @@
+sequenceDiagram
+    participant CRF as Cloud Run Function
+    participant PubSub as Pub/Sub
+    participant Vertex as Vertex AI Pipelines
+    participant Reg as Model Registry
+    participant BQ as BigQuery
+    participant Batch as Batch Prediction Job
+    participant Monitor as Model Monitoring
+    participant Alert as Email Alerts
+
+    Note over CRF: Triggered by new data or schedule
+
+    CRF->>Vertex: Trigger prediction pipeline
+    Vertex->>Reg: Lookup default (champion) model
+    Reg-->>Vertex: Return model resource
+    Vertex->>BQ: Execute preprocessing SQL
+    BQ-->>Vertex: Preprocessed data ready
+    Vertex->>Batch: Start batch prediction job
+    Batch->>BQ: Read input table
+    Batch->>Batch: Generate predictions
+    Batch->>BQ: Write predictions output
+    Vertex->>Monitor: Check for data skew
+    Monitor->>Monitor: Compare training vs serving data
+
+    alt Skew detected
+        Monitor->>Alert: Send email alert
+    end
+
+    Vertex->>PubSub: Publish completion event
+    PubSub-->>CRF: Notify completion
